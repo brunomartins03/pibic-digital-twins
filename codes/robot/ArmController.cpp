@@ -1,97 +1,94 @@
 #include "ArmController.h"
 #include <math.h>
 
+namespace {
+constexpr uint8_t GRIPPER = JOINT_COUNT; // index of the gripper servo
+constexpr float HOME_DEG = 90.0f;
+
+// 500-2400us is the usual full-range pulse width for SG90-class servos.
+// Narrow it if a servo buzzes or strains at the endpoints.
+constexpr int PULSE_MIN_US = 500;
+constexpr int PULSE_MAX_US = 2400;
+} // namespace
+
+bool operator==(const ArmState &a, const ArmState &b) {
+  for (uint8_t i = 0; i < JOINT_COUNT; i++) {
+    if (a.joints[i] != b.joints[i]) return false;
+  }
+  return a.gripper == b.gripper;
+}
+
 float ArmController::clampAngle(float v) {
   if (v < 0) return 0;
   if (v > 180) return 180;
   return v;
 }
 
-void ArmController::begin(uint8_t basePin, uint8_t shoulderPin, uint8_t elbowPin,
-                           uint8_t gripperPin, uint8_t stepDeg, float moveSpeedDegPerTick) {
+void ArmController::begin(const uint8_t jointPins[JOINT_COUNT], uint8_t gripperPin,
+                          uint8_t stepDeg, float maxStepPerTick, uint16_t tickMs) {
   stepDeg_ = stepDeg;
-  moveSpeed_ = moveSpeedDegPerTick;
+  maxStepPerTick_ = maxStepPerTick;
+  tickMs_ = tickMs;
 
-  for (uint8_t i = 0; i < JOINT_COUNT; i++) {
-    current_[i] = 90;
-    target_[i] = 90;
+  for (uint8_t i = 0; i <= GRIPPER; i++) {
+    current_[i] = HOME_DEG;
+    target_[i] = HOME_DEG;
+    uint8_t pin = (i == GRIPPER) ? gripperPin : jointPins[i];
+#if defined(ESP32)
+    servos_[i].setPeriodHertz(50); // standard hobby servo frequency
+#endif
+    servos_[i].attach(pin, PULSE_MIN_US, PULSE_MAX_US);
   }
-  currentGripper_ = 90;
-  targetGripper_ = 90;
-
-  // Standard hobby servos run at 50Hz; ESP32Servo needs this set explicitly
-  // before attach() since the underlying LEDC timer is shared/configurable.
-  // servoBase_.setPeriodHertz(50);
-  // servoShoulder_.setPeriodHertz(50);
-  // servoElbow_.setPeriodHertz(50);
-  // servoGripper_.setPeriodHertz(50);
-
-  // 500-2400us is the common full-range pulse width for SG90-class servos.
-  // Narrow this if your specific servos buzz/strain at the endpoints.
-  servoBase_.attach(basePin, 500, 2400);
-  servoShoulder_.attach(shoulderPin, 500, 2400);
-  servoElbow_.attach(elbowPin, 500, 2400);
-  servoGripper_.attach(gripperPin, 500, 2400);
-
   writeServos();
+  lastTickMs_ = millis();
 }
 
 void ArmController::update() {
-  bool moved = false;
+  unsigned long now = millis();
+  if (now - lastTickMs_ < tickMs_) return;
+  lastTickMs_ = now;
 
-  for (uint8_t i = 0; i < JOINT_COUNT; i++) {
+  bool moved = false;
+  for (uint8_t i = 0; i <= GRIPPER; i++) {
     float diff = target_[i] - current_[i];
     if (fabsf(diff) < 0.01f) continue;
-    current_[i] += constrain(diff, -moveSpeed_, moveSpeed_);
+    current_[i] += constrain(diff, -maxStepPerTick_, maxStepPerTick_);
     moved = true;
   }
-
-  float gDiff = targetGripper_ - currentGripper_;
-  if (fabsf(gDiff) >= 0.01f) {
-    currentGripper_ += constrain(gDiff, -moveSpeed_, moveSpeed_);
-    moved = true;
-  }
-
   if (moved) writeServos();
 }
 
+void ArmController::nudge(uint8_t index, int delta) {
+  target_[index] = clampAngle(target_[index] + delta);
+}
+
 bool ArmController::applyKey(char key) {
-  switch (key) {
-    case 'q': target_[JOINT_BASE] = clampAngle(target_[JOINT_BASE] + stepDeg_); break;
-    case 'a': target_[JOINT_BASE] = clampAngle(target_[JOINT_BASE] - stepDeg_); break;
-
-    case 'w': target_[JOINT_SHOULDER] = clampAngle(target_[JOINT_SHOULDER] + stepDeg_); break;
-    case 's': target_[JOINT_SHOULDER] = clampAngle(target_[JOINT_SHOULDER] - stepDeg_); break;
-
-    case 'e': target_[JOINT_ELBOW] = clampAngle(target_[JOINT_ELBOW] + stepDeg_); break;
-    case 'd': target_[JOINT_ELBOW] = clampAngle(target_[JOINT_ELBOW] - stepDeg_); break;
-
-    case 'r': targetGripper_ = clampAngle(targetGripper_ + stepDeg_); break;
-    case 'f': targetGripper_ = clampAngle(targetGripper_ - stepDeg_); break;
-
-    default:
-      return false;
+  switch (tolower(key)) {
+    case 'q': nudge(JOINT_BASE, +stepDeg_); break;
+    case 'a': nudge(JOINT_BASE, -stepDeg_); break;
+    case 'w': nudge(JOINT_SHOULDER, +stepDeg_); break;
+    case 's': nudge(JOINT_SHOULDER, -stepDeg_); break;
+    case 'e': nudge(JOINT_ELBOW, +stepDeg_); break;
+    case 'd': nudge(JOINT_ELBOW, -stepDeg_); break;
+    case 'r': nudge(GRIPPER, +stepDeg_); break;
+    case 'f': nudge(GRIPPER, -stepDeg_); break;
+    default: return false;
   }
   return true;
 }
 
-void ArmController::setTargets(const float joints[JOINT_COUNT], float gripper) {
-  for (uint8_t i = 0; i < JOINT_COUNT; i++) {
-    target_[i] = clampAngle(joints[i]);
-  }
-  targetGripper_ = clampAngle(gripper);
+void ArmController::setTargets(const ArmState &target) {
+  for (uint8_t i = 0; i < JOINT_COUNT; i++) target_[i] = clampAngle(target.joints[i]);
+  target_[GRIPPER] = clampAngle(target.gripper);
 }
 
 ArmState ArmController::getState() const {
   ArmState s;
-  for (uint8_t i = 0; i < JOINT_COUNT; i++) s.joints[i] = current_[i];
-  s.gripper = currentGripper_;
+  for (uint8_t i = 0; i < JOINT_COUNT; i++) s.joints[i] = roundf(current_[i]);
+  s.gripper = roundf(current_[GRIPPER]);
   return s;
 }
 
 void ArmController::writeServos() {
-  servoBase_.write((int)roundf(current_[JOINT_BASE]));
-  servoShoulder_.write((int)roundf(current_[JOINT_SHOULDER]));
-  servoElbow_.write((int)roundf(current_[JOINT_ELBOW]));
-  servoGripper_.write((int)roundf(currentGripper_));
+  for (uint8_t i = 0; i <= GRIPPER; i++) servos_[i].write((int)roundf(current_[i]));
 }
