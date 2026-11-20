@@ -1,0 +1,14 @@
+{
+  "name": "split-model",
+  "description": "Splits model2.glb into one GLB per moving part for the Decentraland scene",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "split": "node split-model.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "meshoptimizer": "^1.3.0"
+  }
+}
