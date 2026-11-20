@@ -1,11 +1,12 @@
 # Código-fonte do gêmeo digital
 
-Esta pasta contém os dois módulos do sistema:
+Esta pasta contém os módulos do sistema:
 
 | Módulo                                   | Linguagem      | Papel                                                         |
 |------------------------------------------|----------------|---------------------------------------------------------------|
 | [`robot/`](robot/README.md)              | C++ (Arduino)  | Firmware do ESP8266: aciona os servos e publica/recebe estados |
 | [`relay-server/`](relay-server/README.md)| Go             | Ponte MQTT ⇄ WebSocket entre o braço e as cenas do Decentraland |
+| [`scene/`](scene/README.md)              | TypeScript (SDK7) | Cena do Decentraland: braço virtual, telemetria e comandos |
 
 ## Visão geral
 
@@ -84,8 +85,9 @@ ESP32) — detalhes em [`robot/docs/firmware.md`](robot/docs/firmware.md) e
    cp config.example.h config.h   # preencha WiFi e MQTT_HOST (IP do broker)
    make upload PORT=/dev/ttyUSB0
    ```
-4. **Cena:** conecte em `ws://<ip-do-relay>:8080/ws/scene?token=segredo`, ou
-   use o simulador: `go run ./cmd/scene-sim -token segredo`.
+4. **Cena:** `cd scene && npm install && npm start` (ajuste `RELAY_URL` e
+   `SCENE_TOKEN` em `scene/src/config.ts`; ver [testes da cena](scene/docs/testes.md)),
+   ou use o simulador: `go run ./cmd/scene-sim -token segredo`.
 
 ## Teste ponta a ponta sem hardware
 
