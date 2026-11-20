@@ -1,0 +1,140 @@
+{
+  "source": "4-Axis Arm Assembly by samoubala, CC-BY-4.0, https://sketchfab.com/3d-models/4-axis-arm-assembly-c0a748faf37644288c1271e9a6f51057",
+  "units": "meters",
+  "frame": "y up; arm reaches toward +z; base center on the origin",
+  "note": "Rest pose is the pose of the original model. Angles are rotations about \"axis\" (right-hand rule) relative to that pose; calibrate offsets against servo angles.",
+  "triangles": {
+    "original": 20374,
+    "final": 9498
+  },
+  "parts": [
+    {
+      "name": "base",
+      "file": "base.glb",
+      "parent": null,
+      "relayField": null,
+      "axis": null,
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "offsetFromParent": [
+        0,
+        0,
+        0
+      ],
+      "triangles": 1568
+    },
+    {
+      "name": "turntable",
+      "file": "turntable.glb",
+      "parent": "base",
+      "relayField": "joints[0]",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "pivot": [
+        0,
+        0.038,
+        0
+      ],
+      "offsetFromParent": [
+        0,
+        0.038,
+        0
+      ],
+      "triangles": 708
+    },
+    {
+      "name": "upper_arm",
+      "file": "upper_arm.glb",
+      "parent": "turntable",
+      "relayField": "joints[1]",
+      "axis": [
+        -1,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.0197,
+        0.0726,
+        0.0039
+      ],
+      "offsetFromParent": [
+        -0.0197,
+        0.0346,
+        0.0039
+      ],
+      "triangles": 640
+    },
+    {
+      "name": "forearm",
+      "file": "forearm.glb",
+      "parent": "upper_arm",
+      "relayField": "joints[2]",
+      "axis": [
+        -1,
+        0,
+        0
+      ],
+      "pivot": [
+        -0.0061,
+        0.129,
+        0.0496
+      ],
+      "offsetFromParent": [
+        0.0136,
+        0.0564,
+        0.0458
+      ],
+      "triangles": 1878
+    },
+    {
+      "name": "jaw_driven",
+      "file": "jaw_driven.glb",
+      "parent": "forearm",
+      "relayField": "gripper",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "pivot": [
+        -0.0232,
+        0.1715,
+        0.179
+      ],
+      "offsetFromParent": [
+        -0.0171,
+        0.0425,
+        0.1293
+      ],
+      "triangles": 3988
+    },
+    {
+      "name": "jaw_idler",
+      "file": "jaw_idler.glb",
+      "parent": "forearm",
+      "relayField": "gripper (mirrored)",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "pivot": [
+        -0.0361,
+        0.1405,
+        0.18
+      ],
+      "offsetFromParent": [
+        -0.0301,
+        0.0115,
+        0.1303
+      ],
+      "triangles": 716
+    }
+  ]
+}

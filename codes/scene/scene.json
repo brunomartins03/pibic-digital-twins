@@ -1,0 +1,27 @@
+{
+  "ecs7": true,
+  "runtimeVersion": "7",
+  "display": {
+    "title": "Robotic arm digital twin",
+    "description": "Virtual twin of a 3-joint robotic arm, synchronized through the relay server. Arm model: \"4-Axis Arm Assembly\" by samoubala (CC-BY-4.0)."
+  },
+  "owner": "",
+  "contact": {
+    "name": "PIBIC Digital Twins",
+    "email": ""
+  },
+  "main": "bin/index.js",
+  "tags": ["robotics", "digital-twin"],
+  "scene": {
+    "parcels": ["30,30"],
+    "base": "30,30"
+  },
+  "spawnPoints": [
+    {
+      "name": "spawn1",
+      "default": true,
+      "position": { "x": [7, 9], "y": [0, 0], "z": [3, 4] },
+      "cameraTarget": { "x": 8, "y": 1, "z": 8 }
+    }
+  ]
+}

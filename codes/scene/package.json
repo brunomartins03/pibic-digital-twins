@@ -1,0 +1,24 @@
+{
+  "name": "robotic-arm-scene",
+  "version": "1.0.0",
+  "description": "Decentraland scene of the robotic arm digital twin",
+  "private": true,
+  "scripts": {
+    "start": "sdk-commands start",
+    "build": "sdk-commands build",
+    "deploy": "sdk-commands deploy"
+  },
+  "devDependencies": {
+    "@dcl/js-runtime": "7.33.0",
+    "@dcl/sdk": "7.33.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 120,
+    "trailingComma": "none"
+  }
+}
