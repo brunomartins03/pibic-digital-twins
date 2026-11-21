@@ -9,6 +9,7 @@
 #else
 #include <ESP8266WiFi.h>
 #endif
+#include <WiFiClientSecure.h>
 
 #include "ArmController.h"
 
@@ -32,6 +33,7 @@ public:
     const char *username; // empty for anonymous
     const char *password;
     const char *topicPrefix;
+    const char *caCert; // PEM CA to connect over TLS; nullptr for plain TCP
   };
 
   void begin(const Config &config);
@@ -47,8 +49,12 @@ public:
   bool isConnected() { return mqtt_.connected(); }
 
 private:
-  WiFiClient wifiClient_;
-  PubSubClient mqtt_{wifiClient_};
+  WiFiClient plainClient_;
+  WiFiClientSecure tlsClient_;
+#if !defined(ESP32)
+  BearSSL::X509List trustAnchors_;
+#endif
+  PubSubClient mqtt_;
   Config config_{};
   String clientId_;
   String stateTopic_, cmdTopic_, statusTopic_;

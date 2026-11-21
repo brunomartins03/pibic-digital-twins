@@ -32,14 +32,30 @@ Copie `config.example.h` para `config.h` (ignorado pelo Git) e preencha:
 | Macro                       | Descrição                                               |
 |-----------------------------|---------------------------------------------------------|
 | `WIFI_SSID`, `WIFI_PASSWORD`| Rede Wi-Fi (2,4 GHz)                                     |
-| `MQTT_HOST`, `MQTT_PORT`    | Broker MQTT, normalmente o IP da máquina do relay        |
-| `MQTT_USERNAME`, `MQTT_PASSWORD` | Credenciais do broker; vazio para acesso anônimo   |
+| `MQTT_HOST`, `MQTT_PORT`    | Broker MQTT; por padrão a implantação EMQX do projeto, porta 8883 |
+| `MQTT_TLS`                  | `1` para conectar com TLS usando a CA de `mqtt_ca.h`; `0` para TCP simples (porta 1883) |
+| `MQTT_USERNAME`, `MQTT_PASSWORD` | Credenciais do broker (`robotarm-device` no EMQX); vazio para acesso anônimo |
 | `MQTT_CLIENT_ID`            | Base do ID do cliente (recebe um sufixo aleatório)       |
 | `MQTT_TOPIC_PREFIX`         | Prefixo dos tópicos; igual ao do relay                   |
 | `PIN_BASE` … `PIN_GRIPPER`  | GPIOs dos servos ([hardware](hardware.md))               |
 | `STEP_DEG`                  | Graus por tecla na Serial (5)                            |
 | `MOVE_STEP_DEG`, `MOVE_TICK_MS` | Velocidade: 2° a cada 20 ms = 100°/s                 |
 | `TELEMETRY_MIN_INTERVAL_MS` | Intervalo mínimo entre publicações de estado (100 ms)    |
+
+### TLS
+
+O broker do projeto (EMQX Serverless) só aceita conexões com TLS. Com
+`MQTT_TLS` em `1`, o `MqttLink` usa `WiFiClientSecure` (BearSSL no ESP8266,
+mbedTLS no ESP32) e valida o certificado do broker com a CA de `mqtt_ca.h`
+(DigiCert Global Root G2, válida até 2038, cópia de `codes/emqxsl-ca.crt`).
+
+A validação depende da data atual, então o firmware sincroniza o relógio por
+NTP (`pool.ntp.org`) e só tenta o *handshake* depois disso; até lá, a Serial
+mostra `[mqtt] waiting for NTP time to validate the broker certificate`. O
+*handshake* bloqueia o `loop()` por cerca de 1 a 2 s a cada (re)conexão.
+
+A rede da placa precisa permitir a porta 8883 de saída. Se o broker mudar de
+autoridade certificadora, substitua o conteúdo de `mqtt_ca.h`.
 
 ## Compilação e gravação
 
