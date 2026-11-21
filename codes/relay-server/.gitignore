@@ -1,3 +1,6 @@
 # Binaries from "go build ./cmd/..."
 /relay
 /scene-sim
+
+# Local Docker settings
+/.env

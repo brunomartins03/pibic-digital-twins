@@ -1,0 +1,19 @@
+# Relay server for the project's server. Settings come from .env (see
+# .env.example). The port is published on HOST_BIND, by default the gateway
+# of the Catalyst Docker network, so the Catalyst nginx reaches the relay at
+# http://172.20.0.1:8080 while it stays off the public interfaces.
+services:
+  relay:
+    build: .
+    image: robotarm-relay
+    container_name: robotarm-relay
+    restart: unless-stopped
+    environment:
+      MQTT_BROKER: ${MQTT_BROKER:?set MQTT_BROKER in .env}
+      MQTT_TOPIC_PREFIX: ${MQTT_TOPIC_PREFIX:-robotarm}
+      MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-robotarm-relay}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      SCENE_TOKEN: ${SCENE_TOKEN:-}
+    ports:
+      - "${HOST_BIND:-172.20.0.1}:${HOST_PORT:-8080}:8080"
