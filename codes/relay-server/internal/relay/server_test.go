@@ -210,3 +210,36 @@ func getJSON(t *testing.T, url string, v any) {
 		t.Fatalf("decode %s: %v", url, err)
 	}
 }
+
+func TestHTTPCommand(t *testing.T) {
+	hub, pub, ts := newTestServer(t, "secret")
+	post := func(query, body string) (int, Envelope) {
+		t.Helper()
+		resp, err := http.Post(ts.URL+"/api/command"+query, "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		var env Envelope
+		_ = json.NewDecoder(resp.Body).Decode(&env)
+		return resp.StatusCode, env
+	}
+	cmd := `{"type":"command","id":"7","state":{"joints":[45,120,60],"gripper":10}}`
+
+	if code, _ := post("", cmd); code != http.StatusUnauthorized {
+		t.Fatalf("missing token: %d, want 401", code)
+	}
+	if code, env := post("?token=secret", cmd); code != http.StatusBadRequest || env.Message != "device offline" {
+		t.Fatalf("offline device: %d %+v", code, env)
+	}
+	hub.SetDeviceOnline(true)
+	if code, env := post("?token=secret", cmd); code != http.StatusOK || env.Type != TypeAck || env.ID != "7" {
+		t.Fatalf("online device: %d %+v, want ack", code, env)
+	}
+	if code, env := post("?token=secret", `not json`); code != http.StatusBadRequest || env.Type != TypeError {
+		t.Fatalf("invalid JSON: %d %+v", code, env)
+	}
+	if got := pub.commands(); len(got) != 1 || got[0].Joints[0] != 45 {
+		t.Fatalf("published %+v", got)
+	}
+}

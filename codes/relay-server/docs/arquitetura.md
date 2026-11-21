@@ -21,7 +21,7 @@ cmd/scene-sim/main.go      cliente de teste que se comporta como uma cena
 internal/relay/
 ├── protocol.go            ArmState, Envelope, constantes e validação
 ├── hub.go                 estado em memória e difusão para as cenas
-├── server.go              rotas HTTP e WebSocket (/ws/scene, /api/state, /healthz)
+├── server.go              rotas HTTP e WebSocket (/ws/scene, /api/command, /api/state, /healthz)
 └── mqtt.go                MQTTLink: inscrição em state/status e publicação de cmd
 ```
 

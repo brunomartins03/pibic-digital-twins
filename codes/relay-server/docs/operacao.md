@@ -88,6 +88,44 @@ go run ./cmd/scene-sim -send "45 120 60 10;home" -interval 5s -wait 10s   # rote
 
 Na cena, abra um WebSocket para `ws://<ip-do-relay>:8080/ws/scene?token=...`,
 atualize o modelo 3D a cada `telemetry` e envie `command` com o estado
-completo desejado (veja o [protocolo](protocolo.md)). Cenas publicadas fora do
-modo de pré-visualização exigem `wss://`: nesse caso, exponha o relay por trás
-de um proxy reverso com TLS (por exemplo, Caddy ou Nginx).
+completo desejado (veja o [protocolo](protocolo.md)). Se o WebSocket não for
+possível, consulte `/healthz` e `/api/state` periodicamente e envie comandos
+por `POST /api/command`. A cena em [`scene/`](../../scene/README.md) suporta
+os dois modos.
+
+Cenas publicadas fora do modo de pré-visualização exigem `https://`/`wss://`:
+exponha o relay por trás de um proxy reverso com TLS.
+
+### Publicação pelo nginx do Catalyst
+
+No servidor do projeto, o relay é publicado em
+`https://kiriland-metaverso.duckdns.org/robotarm/` por uma rota no nginx do
+Catalyst, `/opt/catalyst/catalyst-owner/local/nginx/include/robotarm.conf`
+(incluída em `routes.conf`):
+
+```nginx
+location /robotarm/ {
+    proxy_pass http://172.20.0.1:8080/;   # gateway da rede catalyst-owner_default
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+}
+```
+
+O relay deve ouvir no gateway da rede Docker para que o contêiner do nginx o
+alcance:
+
+```bash
+RELAY_ADDR=172.20.0.1:8080 go run ./cmd/relay
+```
+
+Recarregue com `docker exec nginx nginx -t && docker exec nginx nginx -s reload`.
+O proxy TLS da universidade, à frente do nginx, não repassa o *upgrade* de
+WebSocket para essa rota; por isso a cena publicada usa o modo HTTP.
+Sem `SCENE_TOKEN`, qualquer pessoa com a URL pode enviar comandos; e, mesmo
+com token, ele fica visível no código da cena publicada.
