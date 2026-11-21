@@ -76,7 +76,10 @@ curl -s https://kiriland-metaverso.duckdns.org/content/entities/active \
 
 Para visitar, abra
 <https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland-metaverso.duckdns.org&position=30%2C30>.
-A cena publicada usa o relay em `https://kiriland-metaverso.duckdns.org/robotarm`.
+A cena publicada usa o relay em `https://kiriland-metaverso.duckdns.org/robotarm`,
+publicado pelo nginx do Catalyst; a configuração e o problema do proxy da
+universidade com WebSocket estão em
+[implantação](../../relay-server/docs/implantacao.md).
 
 ### Teste ponta a ponta com o Wokwi
 

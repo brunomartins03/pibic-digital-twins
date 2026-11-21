@@ -66,6 +66,14 @@ origem do movimento.
 O protocolo completo está em
 [`relay-server/docs/protocolo.md`](relay-server/docs/protocolo.md).
 
+### Implantação
+
+No servidor do projeto, a cena está publicada no Catalyst (parcela 30,30) e o
+relay roda em Docker atrás do nginx do Catalyst, em
+`https://kiriland-metaverso.duckdns.org/robotarm/`. Como o proxy TLS da
+universidade não repassa WebSocket, a cena publicada usa o modo HTTP. Detalhes
+em [`relay-server/docs/implantacao.md`](relay-server/docs/implantacao.md).
+
 ## Execução do sistema completo
 
 Pré-requisitos: Go ≥ 1.22, Mosquitto, `arduino-cli` (com os *cores* ESP8266 e

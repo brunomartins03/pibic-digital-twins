@@ -48,6 +48,10 @@ Robotic arm - digital twin firmware
 [mqtt] connected, listening on dt-sim-7f3a9c/cmd
 ```
 
+No plano gratuito do Wokwi, a simulação pelo CLI é encerrada após 5 minutos
+(`API Error: Connection timed out after 5 minutes`), mesmo com um
+`SIM_TIMEOUT` maior; rode uma simulação por teste.
+
 Para o teste completo com relay e cena simulada, veja
 [`relay-server/docs/testes.md`](../../relay-server/docs/testes.md#3-teste-ponta-a-ponta-wokwi).
 
