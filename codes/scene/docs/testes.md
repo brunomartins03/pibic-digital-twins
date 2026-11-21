@@ -11,8 +11,9 @@ Compila `src/` para `bin/index.js` e executa o verificador de tipos.
 ## Preview local com o relay
 
 O preview serve a cena em `http://localhost:8000` (realm `LocalPreview`).
-Nele, a cena pode abrir `ws://localhost:8080`, então o ciclo completo funciona
-com o relay rodando na mesma máquina que o cliente do Decentraland.
+Para usar um relay local, troque `RELAY_URL` em `src/config.ts` por
+`http://localhost:8080`; o ciclo completo funciona com o relay rodando na
+mesma máquina que o cliente do Decentraland.
 
 1. Broker e relay (ver [operação do relay](../../relay-server/docs/operacao.md)):
    ```bash
@@ -33,7 +34,9 @@ com o relay rodando na mesma máquina que o cliente do Decentraland.
    ```
 
 Se o preview e o relay estiverem em um servidor remoto, encaminhe as duas
-portas e abra o Explorer na sua máquina:
+portas e abra o Explorer, ou o cliente web
+(`https://decentraland.org/bevy-web/?preview=true&realm=http://127.0.0.1:8000&position=30,30`),
+na sua máquina:
 
 ```bash
 ssh -L 8000:localhost:8000 -L 8080:localhost:8080 <usuario>@<servidor>
@@ -71,7 +74,21 @@ curl -s https://kiriland-metaverso.duckdns.org/content/entities/active \
   -H 'content-type: application/json' -d '{"pointers":["30,30"]}'
 ```
 
-Para visitar, conecte o Explorer ao realm
-`https://kiriland-metaverso.duckdns.org` e vá até 30,30. Como o relay não está
-exposto por `wss://`, a cena publicada mostra o braço na pose de repouso com o
-painel em `Relay: disconnected`; o ciclo com o relay é testado no preview.
+Para visitar, abra
+<https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland-metaverso.duckdns.org&position=30%2C30>.
+A cena publicada usa o relay em `https://kiriland-metaverso.duckdns.org/robotarm`.
+
+### Teste ponta a ponta com o Wokwi
+
+Validado em 20/11/2026, com o relay em `RELAY_ADDR=172.20.0.1:8080` e o
+broker e o prefixo do Wokwi
+([simulação](../../robot/docs/simulacao.md)):
+
+| Verificação                                                    | Resultado |
+|----------------------------------------------------------------|-----------|
+| `/healthz` e `/api/state` pela URL pública                     | OK — `deviceOnline: true` com o ESP32 simulado |
+| *Preflight* CORS de `POST /api/command`                         | OK        |
+| Comando `[30,60,150]`, garra 20, por `POST` na URL pública      | OK — `ack`; o braço simulado chegou à pose em ~6 s e cada passo apareceu em `/api/state` |
+| WebSocket pela URL pública                                      | Falha — o proxy TLS da universidade responde 400 ao *upgrade* |
+
+O plano gratuito do Wokwi encerra a simulação pelo CLI após 5 minutos.

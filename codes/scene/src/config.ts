@@ -1,8 +1,14 @@
 import { Vector3 } from '@dcl/sdk/math'
 
-// Relay WebSocket endpoint. A deployed scene can only open wss:// URLs, so
-// ws://localhost works in the local preview only.
-export const RELAY_URL = 'ws://localhost:8080/ws/scene'
+// Relay base URL. The Catalyst nginx publishes the relay under /robotarm/; for
+// a fully local preview use http://localhost:8080. A deployed scene can only
+// open https:// and wss:// URLs.
+export const RELAY_URL = 'https://kiriland-metaverso.duckdns.org/robotarm'
+// 'http' polls the relay and posts commands, for networks whose proxies do not
+// forward WebSocket upgrades (the case of the project's server); 'websocket'
+// keeps a connection open and receives updates as they happen.
+export const RELAY_TRANSPORT: 'http' | 'websocket' = 'http'
+export const POLL_INTERVAL_S = 0.2
 // Must match SCENE_TOKEN on the relay; empty when authentication is disabled.
 export const SCENE_TOKEN = ''
 export const RECONNECT_DELAY_S = 3

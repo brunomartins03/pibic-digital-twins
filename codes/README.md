@@ -26,10 +26,10 @@ Esta pasta contém os módulos do sistema:
 └──────────────┬──────────────────┘
                │ MQTT
 ┌──────────────▼──────────────────┐
-│ relay-server                    │  GET /healthz, GET /api/state
+│ relay-server                    │  GET /healthz, GET /api/state, POST /api/command
 │  MQTTLink ── Hub ── Server      │
 └──────────────┬──────────────────┘
-               │ WebSocket /ws/scene  (telemetry, status, command, ack, error)
+               │ WebSocket /ws/scene ou HTTP (consulta + POST /api/command)
 ┌──────────────▼──────────────────┐
 │ Cena do Decentraland            │  (ou cmd/scene-sim para testes)
 └─────────────────────────────────┘

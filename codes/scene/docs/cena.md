@@ -29,9 +29,19 @@ A pose exibida segue a última telemetria a no máximo `FOLLOW_SPEED_DEG_S`
 
 ## Comunicação (`relay.ts`)
 
-A cena abre um WebSocket em `RELAY_URL` (com `?token=` quando `SCENE_TOKEN`
-estiver definido) e reconecta a cada `RECONNECT_DELAY_S` segundos se a
-conexão cair. Mensagens tratadas, conforme o
+A cena fala com o relay em `RELAY_URL` (com `?token=` quando `SCENE_TOKEN`
+estiver definido) de um destes modos, escolhido por `RELAY_TRANSPORT`:
+
+| Modo        | Recebe estado                                      | Envia comandos         |
+|-------------|----------------------------------------------------|------------------------|
+| `http` (padrão) | Consulta `/healthz` e `/api/state` a cada `POLL_INTERVAL_S` (0,2 s) | `POST /api/command` |
+| `websocket` | Mensagens enviadas pelo relay em `/ws/scene`        | Mensagem `command`     |
+
+O modo HTTP é o padrão porque o proxy TLS à frente do servidor do projeto não
+repassa conexões WebSocket. Ele acrescenta até 0,2 s de atraso, pouco perto do
+intervalo de 100 ms entre telemetrias do firmware. Em ambos os modos, se o
+relay estiver inacessível, a cena tenta de novo a cada `RECONNECT_DELAY_S`
+segundos. Mensagens tratadas, conforme o
 [protocolo](../../relay-server/docs/protocolo.md#websocket-cena--relay):
 
 | Mensagem    | Efeito na cena                                       |
@@ -51,7 +61,9 @@ do braço, e é limitado a 0–180°.
 
 | Constante             | Padrão                         | Descrição                                     |
 |-----------------------|--------------------------------|-----------------------------------------------|
-| `RELAY_URL`           | `ws://localhost:8080/ws/scene` | Endpoint do relay                              |
+| `RELAY_URL`           | `https://kiriland-metaverso.duckdns.org/robotarm` | URL base do relay; `http://localhost:8080` no preview local |
+| `RELAY_TRANSPORT`     | `http`                         | `http` (consulta periódica) ou `websocket`      |
+| `POLL_INTERVAL_S`     | `0.2`                          | Intervalo de consulta no modo `http`            |
 | `SCENE_TOKEN`         | *(vazio)*                      | Igual ao `SCENE_TOKEN` do relay                 |
 | `ARM_POSITION`        | `(8, 0, 8)`                    | Centro da parcela                               |
 | `ARM_SCALE`           | `8`                            | O modelo tem 17 cm; escalado fica com ~1,4 m    |
@@ -61,8 +73,9 @@ do braço, e é limitado a 0–180°.
 | `GRIPPER_CALIBRATION` | `rest: 90, sign: 1`            | Conversão servo → modelo da garra               |
 | `GRIPPER_LIMITS`      | `-15` a `45`                   | Faixa de rotação das pinças (abaixo de −15° elas se sobrepõem) |
 
-Uma cena publicada só pode abrir conexões `wss://`. Para usar o relay fora do
-preview, publique-o atrás de um proxy com TLS e ajuste `RELAY_URL`.
+Uma cena publicada só pode abrir URLs `https://` e `wss://`; o relay é
+publicado pelo nginx do Catalyst (ver
+[operação do relay](../../relay-server/docs/operacao.md#publicação-pelo-nginx-do-catalyst)).
 
 ## Calibração
 
