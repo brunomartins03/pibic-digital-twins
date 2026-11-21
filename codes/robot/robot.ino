@@ -71,7 +71,10 @@ void publishStateIfNeeded() {
 
 void handleSerialInput() {
   while (Serial.available() > 0) {
-    arm.applyKey((char)Serial.read()); // newlines and unknown keys are ignored
+    char key = (char)Serial.read();
+    // Newlines and unknown keys are ignored; known ones are echoed so a
+    // stuck arm can be told apart from keys that never reached the board.
+    if (arm.applyKey(key)) Serial.printf("[serial] key %c\n", key);
   }
 }
 

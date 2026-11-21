@@ -9,7 +9,7 @@ ARDUINO_CLI ?= arduino-cli
 WOKWI_CLI   ?= wokwi-cli
 FQBN        ?= esp8266:esp8266:nodemcuv2
 SIM_FQBN    ?= esp32:esp32:esp32
-PORT        ?= /dev/ttyUSB0
+PORT        ?= /dev/tty.usbserial-0001
 SIM_TIMEOUT ?= 60000
 
 BUILD_DIR := build

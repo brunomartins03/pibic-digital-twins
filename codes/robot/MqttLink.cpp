@@ -3,6 +3,11 @@
 
 namespace {
 constexpr unsigned long RECONNECT_INTERVAL_MS = 5000;
+// connect() blocks loop(), so servo motion and Serial keys freeze while it
+// runs. The ESP8266 defaults (15 s for DNS, TCP and the TLS handshake each,
+// plus 15 s for the CONNACK) could stall the arm for close to a minute.
+constexpr unsigned long CLIENT_TIMEOUT_MS = 5000;
+constexpr uint16_t MQTT_SOCKET_TIMEOUT_S = 5;
 constexpr const char *STATUS_ONLINE = "online";
 constexpr const char *STATUS_OFFLINE = "offline";
 // Certificates are checked against the clock: before NTP sets it (any time
@@ -32,6 +37,11 @@ void MqttLink::begin(const Config &config) {
   } else {
     mqtt_.setClient(plainClient_);
   }
+#if !defined(ESP32)
+  tlsClient_.setTimeout(CLIENT_TIMEOUT_MS);
+  plainClient_.setTimeout(CLIENT_TIMEOUT_MS);
+#endif
+  mqtt_.setSocketTimeout(MQTT_SOCKET_TIMEOUT_S);
   mqtt_.setServer(config.host, config.port);
   mqtt_.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
     handleMessage(topic, payload, length);
@@ -42,11 +52,13 @@ void MqttLink::loop() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   if (!mqtt_.connected()) {
-    unsigned long now = millis();
-    if (hasAttempted_ && now - lastAttemptMs_ < RECONNECT_INTERVAL_MS) return;
+    if (hasAttempted_ && millis() - lastAttemptMs_ < RECONNECT_INTERVAL_MS) return;
     hasAttempted_ = true;
-    lastAttemptMs_ = now;
-    if (!connect()) return;
+    bool ok = connect();
+    // Wait from the end of the attempt: counting from its start, an attempt
+    // slower than the interval was retried at once and loop() never ran.
+    lastAttemptMs_ = millis();
+    if (!ok) return;
   }
   mqtt_.loop();
 }
