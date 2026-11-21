@@ -19,7 +19,7 @@ nginx do Catalyst (contêiner "nginx", porta 80 da VM 192.168.122.84)
    └── /robotarm/                → relay (172.20.0.1:8080)
                                       │  MQTT
                                       ▼
-                                   broker (broker.emqx.io no teste com Wokwi)
+                                   broker EMQX Serverless (wss, porta 8084)
                                       │  MQTT
                                       ▼
                                    braço (ESP8266 ou ESP32 no Wokwi)
@@ -51,9 +51,21 @@ curl 172.20.0.1:8080/healthz
 O contêiner reinicia sozinho (`restart: unless-stopped`) e tem
 *healthcheck* em `/healthz`. Para parar: `docker compose down`.
 
-O `.env.example` usa o broker público e o prefixo da simulação no Wokwi. Para
-o braço físico com o Mosquitto da VM, aponte `MQTT_BROKER` para um endereço da
-VM visível pelo contêiner (por exemplo `tcp://172.20.0.1:1883`) e configure o
+O `.env.example` aponta para o broker do projeto, uma implantação EMQX
+Serverless (`e2e69163.ala.eu-central-1.emqxsl.com`), acessada por
+`wss://…:8084/mqtt`: a rede do servidor bloqueia as portas MQTT de saída
+(1883 e 8883) e WebSocket sem TLS, e só deixa passar a porta 8084 com TLS. O
+certificado do broker é emitido pela DigiCert Global Root G2, já presente na
+imagem, então não é preciso configurar uma CA.
+
+O broker exige autenticação. Há dois usuários, criados pela API REST do EMQX
+(`POST /api/v5/authentication/password_based:built_in_database/users`):
+`robotarm-relay`, usado pelo relay (`MQTT_USERNAME`/`MQTT_PASSWORD` no
+`.env`), e `robotarm-device`, reservado ao braço. As senhas não ficam no
+repositório.
+
+Para usar o Mosquitto da VM, aponte `MQTT_BROKER` para um endereço da VM
+visível pelo contêiner (por exemplo `tcp://172.20.0.1:1883`) e configure o
 Mosquitto para ouvir nele: hoje ele ouve só em `127.0.0.1`.
 
 ## 2. Rota no nginx do Catalyst
