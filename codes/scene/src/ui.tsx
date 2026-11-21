@@ -1,6 +1,6 @@
 import { Color4 } from '@dcl/sdk/math'
 import ReactEcs, { Button, Label, ReactEcsRenderer, UiEntity } from '@dcl/sdk/react-ecs'
-import { COMMAND_STEP_DEG } from './config'
+import { COMMAND_STEP_DEG, TARGET_HOLD_S } from './config'
 import { ArmState, relay, sendCommand } from './relay'
 
 const CONTROLS = ['Base', 'Shoulder', 'Elbow', 'Gripper']
@@ -8,14 +8,28 @@ const HOME: ArmState = { joints: [90, 90, 90], gripper: 90 }
 
 const clampAngle = (v: number) => Math.max(0, Math.min(180, v))
 
-// Commands are relative to the last telemetry, i.e. the real pose of the arm.
+// Last pose commanded from this panel. While the arm is still moving toward
+// it, new commands build on it instead of on the telemetry, so a click on one
+// joint does not stop the motion of the others.
+let lastTarget: ArmState | null = null
+let lastTargetAt = 0
+
+function command(target: ArmState) {
+  if (sendCommand(target)) {
+    lastTarget = target
+    lastTargetAt = Date.now()
+  }
+}
+
 function nudge(control: number, delta: number) {
-  if (!relay.state) return
-  const joints = [...relay.state.joints]
-  let gripper = relay.state.gripper
+  const recent = lastTarget && Date.now() - lastTargetAt < TARGET_HOLD_S * 1000
+  const base = recent ? lastTarget : relay.state
+  if (!base) return
+  const joints = [...base.joints]
+  let gripper = base.gripper
   if (control < 3) joints[control] = clampAngle(joints[control] + delta)
   else gripper = clampAngle(gripper + delta)
-  sendCommand({ joints, gripper })
+  command({ joints, gripper })
 }
 
 const angleOf = (control: number) => {
@@ -69,7 +83,7 @@ const ArmPanel = () => (
       variant="primary"
       fontSize={16}
       uiTransform={{ width: 120, height: 34, margin: '8px 0 0 0' }}
-      onMouseDown={() => sendCommand(HOME)}
+      onMouseDown={() => command(HOME)}
     />
     {relay.lastError ? (
       <Label value={`Error: ${relay.lastError}`} fontSize={13} color={Color4.Red()} uiTransform={{ height: 24 }} />

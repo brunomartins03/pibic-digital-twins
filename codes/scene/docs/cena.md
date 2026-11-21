@@ -55,7 +55,9 @@ segundos. Mensagens tratadas, conforme o
 Mostra o estado da conexão, os ângulos atuais e botões `-`/`+` por junta e
 para a garra (passo `COMMAND_STEP_DEG`, 10°), além de `Home` (todas as
 juntas em 90°). Cada comando parte da última telemetria, isto é, da pose real
-do braço, e é limitado a 0–180°.
+do braço, e é limitado a 0–180°. Por `TARGET_HOLD_S` (10 s) após cada
+comando, os seguintes partem do último alvo enviado; assim, clicar em outra
+junta não interrompe o movimento ainda em curso.
 
 ## Configuração (`config.ts`)
 
@@ -68,6 +70,7 @@ do braço, e é limitado a 0–180°.
 | `ARM_POSITION`        | `(8, 0, 8)`                    | Centro da parcela                               |
 | `ARM_SCALE`           | `8`                            | O modelo tem 17 cm; escalado fica com ~1,4 m    |
 | `COMMAND_STEP_DEG`    | `10`                           | Graus por clique                                |
+| `TARGET_HOLD_S`       | `10`                           | Tempo em que os comandos partem do último alvo  |
 | `FOLLOW_SPEED_DEG_S`  | `180`                          | Velocidade de acompanhamento da telemetria      |
 | `JOINT_CALIBRATION`   | `rest: 90, sign: 1`            | Conversão servo → modelo de cada junta          |
 | `GRIPPER_CALIBRATION` | `rest: 90, sign: 1`            | Conversão servo → modelo da garra               |

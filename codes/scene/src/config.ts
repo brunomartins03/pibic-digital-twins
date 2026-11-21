@@ -20,6 +20,10 @@ export const ARM_SCALE = 8
 
 // Degrees added or removed by each UI button press.
 export const COMMAND_STEP_DEG = 10
+// Seconds during which UI commands build on the last commanded pose instead
+// of the telemetry. The real arm crosses 180 degrees in under 2 s; the Wokwi
+// simulation runs several times slower.
+export const TARGET_HOLD_S = 10
 // Speed at which the virtual joints follow the telemetry, in degrees/second.
 export const FOLLOW_SPEED_DEG_S = 180
 
