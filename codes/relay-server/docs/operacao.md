@@ -67,6 +67,21 @@ curl localhost:8080/healthz      # {"deviceOnline":true,"ok":true}
 curl localhost:8080/api/state    # último estado do braço
 ```
 
+### Docker
+
+```bash
+cp .env.example .env         # ajuste broker, prefixo e token
+docker compose up -d --build
+docker compose logs -f
+```
+
+A imagem (Alpine, ~23 MB) roda como usuário sem privilégios e tem
+*healthcheck* em `/healthz`. O `compose.yaml` publica a porta em
+`HOST_BIND:HOST_PORT` (padrão `172.20.0.1:8080`, o gateway da rede Docker do
+Catalyst; ver [implantação](implantacao.md#1-relay-em-docker)). Dentro do
+contêiner, `localhost` é o próprio contêiner: um broker na máquina hospedeira
+deve ser acessado por um IP dela.
+
 ## 4. Simulador de cena
 
 `scene-sim` substitui a cena do Decentraland durante o desenvolvimento.
@@ -96,36 +111,7 @@ os dois modos.
 Cenas publicadas fora do modo de pré-visualização exigem `https://`/`wss://`:
 exponha o relay por trás de um proxy reverso com TLS.
 
-### Publicação pelo nginx do Catalyst
-
 No servidor do projeto, o relay é publicado em
-`https://kiriland-metaverso.duckdns.org/robotarm/` por uma rota no nginx do
-Catalyst, `/opt/catalyst/catalyst-owner/local/nginx/include/robotarm.conf`
-(incluída em `routes.conf`):
-
-```nginx
-location /robotarm/ {
-    proxy_pass http://172.20.0.1:8080/;   # gateway da rede catalyst-owner_default
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_read_timeout 3600s;
-    proxy_send_timeout 3600s;
-}
-```
-
-O relay deve ouvir no gateway da rede Docker para que o contêiner do nginx o
-alcance:
-
-```bash
-RELAY_ADDR=172.20.0.1:8080 go run ./cmd/relay
-```
-
-Recarregue com `docker exec nginx nginx -t && docker exec nginx nginx -s reload`.
-O proxy TLS da universidade, à frente do nginx, não repassa o *upgrade* de
-WebSocket para essa rota; por isso a cena publicada usa o modo HTTP.
-Sem `SCENE_TOKEN`, qualquer pessoa com a URL pode enviar comandos; e, mesmo
-com token, ele fica visível no código da cena publicada.
+`https://kiriland-metaverso.duckdns.org/robotarm/` pelo nginx do Catalyst; a
+configuração, o problema do proxy da universidade com WebSocket e o teste
+ponta a ponta estão em [implantação](implantacao.md).
