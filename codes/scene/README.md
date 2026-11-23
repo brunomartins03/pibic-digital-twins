@@ -26,6 +26,7 @@ scene/
 ├── assets/models/arm/   # partes do braço (.glb) e manifest.json usados pela cena
 ├── model2.glb           # modelo original ("4-Axis Arm Assembly")
 ├── parts/               # saída do script de divisão (cópia de assets/models/arm/)
+├── split-model/         # script que divide model2.glb em partes (glTF-Transform)
 ├── src/
 │   ├── index.ts         # ponto de entrada
 │   ├── config.ts        # URL do relay, posição, escala e calibração

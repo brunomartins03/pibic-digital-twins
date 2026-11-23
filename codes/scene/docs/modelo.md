@@ -102,15 +102,12 @@ engrenagem.
 
 ### Reproduzir a divisão
 
-O script não está mais na árvore de trabalho (removido em `aae0fe3`), mas
-continua no histórico, no commit `269ac47`. Para regenerar as partes:
+O script fica em [`scene/split-model/`](../split-model/README.md):
 
 ```bash
-git archive 269ac47 codes/Robotik_arm/split-model | tar -x -C /tmp
-cd /tmp/codes/Robotik_arm/split-model
+cd codes/scene/split-model
 npm ci
-node split-model.mjs --input <repo>/codes/scene/model2.glb \
-  --out <repo>/codes/scene/assets/models/arm --max-triangles 10000
+npm run split -- --out ../assets/models/arm     # padrão: ../model2.glb -> ../parts
 ```
 
 Verificado em 23/11/2026: o resultado é idêntico, byte a byte, aos arquivos de
