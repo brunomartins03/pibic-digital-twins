@@ -67,6 +67,14 @@ origem do movimento.
 O protocolo completo está em
 [`relay-server/docs/protocolo.md`](relay-server/docs/protocolo.md).
 
+### Modelo 3D
+
+O Decentraland só move um `.glb` como um bloco único, então o modelo do braço
+foi dividido em seis partes móveis, cada uma com a origem no eixo da sua
+junta, e remontado na cena com entidades aninhadas que giram conforme a
+telemetria do relay. O processo está em
+[`scene/docs/modelo.md`](scene/docs/modelo.md).
+
 ### Implantação
 
 No servidor do projeto, a cena está publicada no Catalyst (parcela 30,30) e o

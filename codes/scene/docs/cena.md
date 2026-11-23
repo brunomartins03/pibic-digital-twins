@@ -3,8 +3,7 @@
 ## Montagem do braço (`arm.ts`)
 
 O Decentraland só transforma um `.glb` como um bloco único, por isso o braço
-é dividido em seis partes (ver
-[`split-model`](../../Robotik_arm/split-model/README.md)). A cena lê
+é dividido em seis partes (ver o [processo de divisão](modelo.md)). A cena lê
 `assets/models/arm/manifest.json` e cria uma entidade por parte, aninhada na
 parte em que está montada:
 
@@ -78,7 +77,7 @@ junta não interrompe o movimento ainda em curso.
 
 Uma cena publicada só pode abrir URLs `https://` e `wss://`; o relay é
 publicado pelo nginx do Catalyst (ver
-[operação do relay](../../relay-server/docs/operacao.md#publicação-pelo-nginx-do-catalyst)).
+[implantação](../../relay-server/docs/implantacao.md#2-rota-no-nginx-do-catalyst)).
 
 ## Calibração
 

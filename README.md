@@ -34,7 +34,7 @@ conhecido do braço.
 | [`codes/robot/`](codes/robot/README.md)    | Firmware do braço (Arduino/ESP8266) e simulação no Wokwi     |
 | [`codes/relay-server/`](codes/relay-server/README.md) | Servidor intermediário MQTT ⇄ WebSocket/HTTP em Go, com Docker |
 | [`codes/scene/`](codes/scene/README.md)    | Cena SDK7 do Decentraland com o braço virtual                |
-| [`codes/Robotik_arm/split-model/`](codes/Robotik_arm/split-model/README.md) | Divisão do modelo 3D do braço em partes móveis |
+| [`codes/scene/docs/modelo.md`](codes/scene/docs/modelo.md) | Divisão do modelo 3D do braço em partes móveis e remontagem na cena |
 | [`research/`](research/)                   | Relatório de pesquisa em LaTeX (`main.tex`) e figuras        |
 
 ## Início rápido
