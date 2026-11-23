@@ -3,7 +3,7 @@ import { Vector3 } from '@dcl/sdk/math'
 // Relay base URL. The Catalyst nginx publishes the relay under /robotarm/; for
 // a fully local preview use http://localhost:8080. A deployed scene can only
 // open https:// and wss:// URLs.
-export const RELAY_URL = 'https://kiriland-metaverso.duckdns.org/robotarm'
+export const RELAY_URL = 'https://kiriland.unb.br/robotarm'
 // 'http' polls the relay and posts commands, for networks whose proxies do not
 // forward WebSocket upgrades (the case of the project's server); 'websocket'
 // keeps a connection open and receives updates as they happen.
