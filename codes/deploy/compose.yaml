@@ -1,0 +1,300 @@
+# Complete Decentraland environment of the project: a Catalyst (content
+# server + lambdas behind nginx), the robotic arm relay, and a job that
+# publishes the campusFGA scene (parcels 0,0-15,16) and the robot scene
+# (parcel 30,30). The comms services (archipelago, Pulse, comms-gatekeeper,
+# LiveKit) are in the "comms" profile. Settings come from .env (see
+# .env.example and README.md).
+#
+# Reconstructed on 2026-11-23 from the deployment running on the lab server
+# (/opt/catalyst/catalyst-owner, /opt/decentraland-comms). Images are pinned
+# to the digests that were running there; the comms images are built from the
+# upstream commits that were checked out there.
+
+name: kiriland
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: 10m, max-file: "3" }
+
+services:
+  # ---------------------------------------------------------------- Catalyst
+
+  postgres:
+    image: postgres:16.16@sha256:30551eca978d79ccf49d037bc297b5670baea61a04ceca42ff7fd3100163d3ce
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: postgres
+      # Read by 001_create_content_database.sh on the first start.
+      POSTGRES_CONTENT_USER: content
+      POSTGRES_CONTENT_PASSWORD: ${POSTGRES_CONTENT_PASSWORD:?set POSTGRES_CONTENT_PASSWORD in .env}
+      POSTGRES_CONTENT_DB: content
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/001_create_content_database.sh:/docker-entrypoint-initdb.d/001_create_content_database.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  content-server:
+    # quay.io/decentraland/catalyst:latest as of 2026-11-12 (content server 8.3.3).
+    image: quay.io/decentraland/catalyst@sha256:8ea7ba85b06b227c79044de0b0ccde6665bdd2056dde5bdf25b22f038b66713a
+    restart: unless-stopped
+    command: ["/usr/local/bin/node", "--max-old-space-size=8192", "content/entrypoints/run-server.js"]
+    working_dir: /app
+    environment:
+      CONTENT_SERVER_ADDRESS: ${PUBLIC_URL:?set PUBLIC_URL in .env}/content/
+      STORAGE_ROOT_FOLDER: /app/storage/content_server/
+      BOOTSTRAP_FROM_SCRATCH: "false"
+      LOG_REQUESTS: "false"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_CONTENT_USER: content
+      POSTGRES_CONTENT_PASSWORD: ${POSTGRES_CONTENT_PASSWORD}
+      POSTGRES_CONTENT_DB: content
+      # Same values as the lab server's .env / .env-advanced.
+      ETH_NETWORK: mainnet
+      LOG_LEVEL: debug
+      METRICS: "true"
+      # Any wallet may deploy to any parcel; nothing is synchronized from the
+      # public Catalysts.
+      IGNORE_BLOCKCHAIN_ACCESS_CHECKS: "true"
+      SYNC_IGNORED_ENTITY_TYPES: profile,store,scene,outfits,wearable,emote
+      TRUSTED_CLIENT_IP_HEADER: x-real-ip
+      POST_ENTITIES_RATE_LIMIT_MAX: 6
+      POST_ENTITIES_RATE_LIMIT_WINDOW_SECONDS: 60
+    volumes:
+      - content_storage:/app/storage/content_server/
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *logging
+
+  lamb2:
+    # quay.io/decentraland/lamb2:latest as of 2026-11-12 (lambdas 4.14.3).
+    image: quay.io/decentraland/lamb2@sha256:38dc2f11f4a549e14454e208c1a46f6ef5b05ff1ffa872790a6a6acdb195ab13
+    restart: unless-stopped
+    working_dir: /app
+    environment:
+      HTTP_SERVER_PORT: 7272
+      LAMBDAS_URL: ${PUBLIC_URL}/lambdas/
+      CONTENT_URL: ${PUBLIC_URL}/content/
+      INTERNAL_LAMBDAS_URL: http://lamb2:7272
+      INTERNAL_CONTENT_URL: http://content-server:6969
+      REALM_NAME: ${REALM_NAME:-test}
+      MAX_USERS: 400
+      ETH_NETWORK: mainnet
+      DISABLE_THIRD_PARTY_PROVIDERS_RESOLVER_SERVICE_USAGE: "false"
+      # Empty without the comms profile: when set, /about reports the realm
+      # unhealthy unless ws-connector answers.
+      ARCHIPELAGO_URL: ${ARCHIPELAGO_URL:-}
+      INTERNAL_ARCHIPELAGO_URL: http://ws-connector:5000
+    logging: *logging
+
+  nginx:
+    image: nginx:1.31.8-alpine@sha256:e2d97c2b8c016f12c2f1a27d095685063b2f281c4edf2babfde6001cf4fb77a8
+    restart: unless-stopped
+    ports:
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/include:/etc/nginx/include:ro
+      - ./nginx/html:/etc/nginx/html:ro
+    depends_on:
+      - content-server
+      - lamb2
+    logging: *logging
+
+  # ------------------------------------------------------- Robotic arm twin
+
+  relay:
+    build: ../relay-server
+    image: kiriland/relay
+    restart: unless-stopped
+    environment:
+      MQTT_BROKER: ${MQTT_BROKER:?set MQTT_BROKER in .env}
+      MQTT_TOPIC_PREFIX: ${MQTT_TOPIC_PREFIX:-robotarm}
+      MQTT_CLIENT_ID: ${MQTT_CLIENT_ID:-robotarm-relay}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      SCENE_TOKEN: ${SCENE_TOKEN:-}
+    logging: *logging
+
+  # Builds the robot scene and publishes it and campusFGA, then exits.
+  deployer:
+    build:
+      context: ./deployer
+      additional_contexts:
+        scene: ../scene
+        campusfga: ./scenes/campusFGA
+    restart: on-failure:3
+    environment:
+      CONTENT_URL: http://content-server:6969
+      RELAY_URL: ${RELAY_URL:-${PUBLIC_URL}/robotarm}
+      SCENE_TOKEN: ${SCENE_TOKEN:-}
+    depends_on:
+      - content-server
+    logging: *logging
+
+  # ------------------------------------------------- Comms (profile "comms")
+
+  nats:
+    profiles: [comms]
+    image: nats:2-alpine@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a # 2.15.3
+    restart: unless-stopped
+    command: ["-m", "8222"]
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8222/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+    logging: *logging
+
+  # Archipelago WebSocket the clients connect to (nginx /archipelago/ws).
+  ws-connector:
+    profiles: [comms]
+    build:
+      context: https://github.com/decentraland/archipelago-workers.git#47d92d5621862a38e7fb35a733b668880a9e5375
+    image: kiriland/ws-connector:47d92d5
+    restart: unless-stopped
+    working_dir: /app/ws-connector
+    environment:
+      HTTP_SERVER_PORT: 5000
+      HTTP_SERVER_HOST: 0.0.0.0
+      NATS_URL: nats://nats:4222
+      COMMS_GATEKEEPER_URL: http://gatekeeper:3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/health/live').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    depends_on:
+      nats:
+        condition: service_healthy
+    logging: *logging
+
+  # Publishes peer.{addr}.cluster_change to NATS, which the gatekeeper turns
+  # into islands. Built, as on the lab server, from the repo's debug image.
+  pulse:
+    profiles: [comms]
+    build:
+      context: https://github.com/decentraland/Pulse.git#91e44f89dd5a857e4ebe08259bec5fc808ae797b
+      dockerfile: Dockerfile.debug
+    image: kiriland/pulse:91e44f8
+    restart: unless-stopped
+    environment:
+      Clusters__Enabled: "true"
+      Nats__Url: nats://nats:4222
+      Metrics__Type: Prometheus
+      Logging__LogLevel__Default: Information
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:5000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 240s
+    depends_on:
+      nats:
+        condition: service_healthy
+    logging: *logging
+
+  gatekeeper:
+    profiles: [comms]
+    build:
+      context: https://github.com/decentraland/comms-gatekeeper.git#b42d45c7bd69a6a7ed62243947f5db249e2cd895
+    image: kiriland/comms-gatekeeper:b42d45c
+    restart: unless-stopped
+    environment:
+      HTTP_SERVER_PORT: 3000
+      HTTP_SERVER_HOST: 0.0.0.0
+      SERVICE_BASE_URL: http://127.0.0.1:3000
+      PG_COMPONENT_PSQL_HOST: postgres-gatekeeper
+      PG_COMPONENT_PSQL_PORT: 5432
+      PG_COMPONENT_PSQL_DATABASE: comms_gatekeeper
+      PG_COMPONENT_PSQL_USER: comms_gatekeeper
+      PG_COMPONENT_PSQL_PASSWORD: ${GATEKEEPER_DB_PASSWORD:-}
+      LAMBDAS_URL: ${PUBLIC_URL}/lambdas
+      CATALYST_CONTENT_URL: ${PUBLIC_URL}/content
+      PROD_LIVEKIT_HOST: ${LIVEKIT_PUBLIC_URL:-ws://localhost}
+      PROD_LIVEKIT_API_HOST: http://livekit:7880
+      PROD_LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+      PROD_LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+      PREVIEW_LIVEKIT_HOST: ${LIVEKIT_PUBLIC_URL:-ws://localhost}
+      PREVIEW_LIVEKIT_API_HOST: http://livekit:7880
+      PREVIEW_LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+      PREVIEW_LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+      COMMS_GATEKEEPER_AUTH_TOKEN: ${COMMS_GATEKEEPER_AUTH_TOKEN:-}
+      PRIVATE_MESSAGES_ROOM_ID: private-messages
+      COMMS_ROOM_PREFIX: world-env-
+      WORLD_ROOM_PREFIX: world-env-scene-room-
+      SCENE_ROOM_PREFIX: genesis-city-env-scene-room-
+      PLACES_API_URL: https://places.decentraland.org/api
+      WORLD_CONTENT_URL: https://worlds-content-server.decentraland.org
+      SOCIAL_SERVICE_URL: https://social-service-ea.decentraland.org
+      DENYLIST_JSON_URL: https://config.decentraland.org/denylist.json
+      VOICE_CHAT_INITIAL_CONNECTION_TTL: 300000
+      VOICE_CHAT_CONNECTION_INTERRUPTED_TTL: 300000
+      COMMUNITY_VOICE_CHAT_NO_MODERATOR_TTL: 300000
+      VOICE_CHAT_EXPIRED_BATCH_SIZE: 50
+      CLUSTER_SUBSCRIBER_ENABLED: "true"
+      NATS_URL: nats://nats:4222
+      NATS_QUEUE_GROUP: comms-gatekeeper-cluster
+    depends_on:
+      postgres-gatekeeper:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    logging: *logging
+
+  postgres-gatekeeper:
+    profiles: [comms]
+    image: postgres:16.16@sha256:30551eca978d79ccf49d037bc297b5670baea61a04ceca42ff7fd3100163d3ce
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: comms_gatekeeper
+      POSTGRES_USER: comms_gatekeeper
+      POSTGRES_PASSWORD: ${GATEKEEPER_DB_PASSWORD:-}
+    volumes:
+      - gatekeeper_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U comms_gatekeeper -d comms_gatekeeper"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  # Signalling goes through nginx (/rtc); media uses the RTC ports below,
+  # which clients reach directly at LIVEKIT_NODE_IP.
+  livekit:
+    profiles: [comms]
+    image: livekit/livekit-server@sha256:25cd902de7cacbd5f1f779f6a6ac1eae20ba8f56b0935934ce6b0ab80d1e3d20 # 1.13.11
+    restart: unless-stopped
+    environment:
+      LIVEKIT_CONFIG: |
+        port: 7880
+        log_level: info
+        rtc:
+          tcp_port: 3060
+          udp_port: 3050
+          use_external_ip: false
+          node_ip: ${LIVEKIT_NODE_IP:-127.0.0.1}
+        turn:
+          enabled: false
+        keys:
+          ${LIVEKIT_API_KEY:-unset}: ${LIVEKIT_API_SECRET:-}
+    ports:
+      - "${LIVEKIT_RTC_BIND:-0.0.0.0}:3050:3050/udp"
+      - "${LIVEKIT_RTC_BIND:-0.0.0.0}:3060:3060/tcp"
+    logging: *logging
+
+volumes:
+  postgres_data:
+  content_storage:
+  gatekeeper_pgdata:
