@@ -4,6 +4,6 @@
     "strict": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "assets/**/*.ts"],
   "extends": "@dcl/sdk/types/tsconfig.ecs7.json"
 }
