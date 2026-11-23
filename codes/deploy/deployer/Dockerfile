@@ -1,7 +1,6 @@
-# One-shot job that builds the robot scene and publishes it, together with
-# the campusFGA snapshot, to the Catalyst. Build contexts (see compose.yaml):
-#   scene    -> codes/scene
-#   campusfga -> codes/deploy/scenes/campusFGA
+# One-shot job that builds codes/scene (campusFGA with the robotic arm twin)
+# and publishes it to the Catalyst. Build context "scene" (see compose.yaml)
+# -> codes/scene.
 # Node 22+ is required by @dcl/sdk-commands (fs.globSync).
 FROM node:22.12.0-bookworm-slim
 
@@ -12,7 +11,6 @@ COPY --from=scene scene.json tsconfig.json .dclignore ./
 COPY --from=scene src ./src
 COPY --from=scene assets ./assets
 
-COPY --from=campusfga . /work/campusFGA
 COPY deploy.js /work/deploy.js
 
 CMD ["node", "/work/deploy.js"]

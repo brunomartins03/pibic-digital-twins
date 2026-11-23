@@ -11,7 +11,7 @@ const path = require('path')
 const { createRequire } = require('module')
 
 const ROBOT_DIR = '/work/robot-scene'
-const SCENES = [ROBOT_DIR, '/work/campusFGA']
+const SCENES = [ROBOT_DIR]
 const req = createRequire(path.join(ROBOT_DIR, 'package.json'))
 const { DeploymentBuilder, createContentClient } = req('dcl-catalyst-client')
 const { Authenticator } = req('@dcl/crypto')

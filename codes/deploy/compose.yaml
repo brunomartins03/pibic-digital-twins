@@ -1,7 +1,7 @@
 # Complete Decentraland environment of the project: a Catalyst (content
 # server + lambdas behind nginx), the robotic arm relay, and a job that
-# publishes the campusFGA scene (parcels 0,0-15,16) and the robot scene
-# (parcel 30,30). The comms services (archipelago, Pulse, comms-gatekeeper,
+# publishes codes/scene: the campusFGA scene (parcels 0,0-15,16) with the
+# robotic arm twin. The comms services (archipelago, Pulse, comms-gatekeeper,
 # LiveKit) are in the "comms" profile. Settings come from .env (see
 # .env.example and README.md).
 #
@@ -125,13 +125,12 @@ services:
       SCENE_TOKEN: ${SCENE_TOKEN:-}
     logging: *logging
 
-  # Builds the robot scene and publishes it and campusFGA, then exits.
+  # Builds codes/scene (campusFGA with the robot arm) and publishes it, then exits.
   deployer:
     build:
       context: ./deployer
       additional_contexts:
         scene: ../scene
-        campusfga: ./scenes/campusFGA
     restart: on-failure:3
     environment:
       CONTENT_URL: http://content-server:6969
