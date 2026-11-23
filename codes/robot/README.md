@@ -27,7 +27,8 @@ make sim                       # compila para ESP32 e simula no Wokwi
 robot/
 ├── robot.ino          # setup/loop: Wi-Fi, controle pela Serial e publicação do estado
 ├── ArmController.*    # servos, movimento suave e teclas de controle local
-├── MqttLink.*         # conexão MQTT: estado, comandos e status (last will)
+├── MqttLink.*         # conexão MQTT (TCP ou TLS): estado, comandos e status (last will)
+├── mqtt_ca.h          # CA do broker do projeto, usada com MQTT_TLS
 ├── config.example.h   # modelo do config.h (não versionado) para a placa real
 ├── config.wokwi.h     # configuração usada na simulação (-DWOKWI_SIM)
 ├── simulation/        # projeto Wokwi (diagram.json, wokwi.toml)

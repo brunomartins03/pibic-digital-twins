@@ -45,20 +45,29 @@ func NewServer(hub *Hub, commands CommandPublisher, sceneToken string) *Server {
 
 // Handler returns the HTTP routes:
 //
-//	/ws/scene   WebSocket for Decentraland scenes
-//	/api/state  last known arm state (204 if none yet)
-//	/healthz    liveness and device status
+//	/ws/scene     WebSocket for Decentraland scenes
+//	/api/command  the same command as over WebSocket, for scenes that poll
+//	/api/state    last known arm state (204 if none yet)
+//	/healthz      liveness and device status
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /ws/scene", s.handleScene)
+	mux.HandleFunc("POST /api/command", s.handleCommandHTTP)
 	mux.HandleFunc("GET /api/state", s.handleState)
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	return withCORS(mux)
 }
 
-func (s *Server) handleScene(w http.ResponseWriter, r *http.Request) {
+func (s *Server) authorized(w http.ResponseWriter, r *http.Request) bool {
 	if s.sceneToken != "" && r.URL.Query().Get("token") != s.sceneToken {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return false
+	}
+	return true
+}
+
+func (s *Server) handleScene(w http.ResponseWriter, r *http.Request) {
+	if !s.authorized(w, r) {
 		return
 	}
 	conn, err := s.upgrader.Upgrade(w, r, nil)
@@ -157,6 +166,28 @@ func writePump(conn *websocket.Conn, c *sceneClient) {
 	}
 }
 
+// handleCommandHTTP accepts a command envelope in the request body and
+// answers with the ack or error envelope (status 200 or 400). It serves
+// scenes behind proxies that do not forward WebSocket upgrades.
+func (s *Server) handleCommandHTTP(w http.ResponseWriter, r *http.Request) {
+	if !s.authorized(w, r) {
+		return
+	}
+	var env, reply Envelope
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxMessageSize)).Decode(&env); err != nil {
+		reply = Envelope{Type: TypeError, Message: "invalid JSON: " + err.Error()}
+	} else {
+		reply = s.handleCommand(env)
+	}
+	if reply.Type == TypeError {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(reply)
+		return
+	}
+	writeJSON(w, reply)
+}
+
 func (s *Server) handleState(w http.ResponseWriter, _ *http.Request) {
 	state, have, _ := s.hub.Snapshot()
 	if !have {
@@ -181,7 +212,8 @@ func writeJSON(w http.ResponseWriter, v any) {
 func withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return

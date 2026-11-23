@@ -6,11 +6,14 @@
 #define WIFI_SSID     "your-wifi-name"
 #define WIFI_PASSWORD "your-wifi-password"
 
-// MQTT broker shared with the relay server (usually the relay's machine).
-#define MQTT_HOST         "192.168.1.100"
-#define MQTT_PORT         1883
-#define MQTT_USERNAME     ""          // empty for anonymous access
-#define MQTT_PASSWORD     ""
+// MQTT broker shared with the relay server: the project's EMQX deployment,
+// which only accepts TLS (port 8883, CA in mqtt_ca.h). For a local broker
+// without TLS, such as Mosquitto, set MQTT_TLS to 0 and MQTT_PORT to 1883.
+#define MQTT_HOST         "e2e69163.ala.eu-central-1.emqxsl.com"
+#define MQTT_PORT         8883
+#define MQTT_TLS          1
+#define MQTT_USERNAME     "robotarm-device"  // empty for anonymous access
+#define MQTT_PASSWORD     ""                 // ask the project team
 #define MQTT_CLIENT_ID    "robotarm"  // a random suffix is appended
 #define MQTT_TOPIC_PREFIX "robotarm"  // must match the relay's MQTT_TOPIC_PREFIX
 

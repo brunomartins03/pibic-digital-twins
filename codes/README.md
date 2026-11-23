@@ -1,11 +1,13 @@
 # Código-fonte do gêmeo digital
 
-Esta pasta contém os dois módulos do sistema:
+Esta pasta contém os módulos do sistema:
 
 | Módulo                                   | Linguagem      | Papel                                                         |
 |------------------------------------------|----------------|---------------------------------------------------------------|
 | [`robot/`](robot/README.md)              | C++ (Arduino)  | Firmware do ESP8266: aciona os servos e publica/recebe estados |
 | [`relay-server/`](relay-server/README.md)| Go             | Ponte MQTT ⇄ WebSocket entre o braço e as cenas do Decentraland |
+| [`scene/`](scene/README.md)              | TypeScript (SDK7) | Cena do Decentraland: braço virtual, telemetria e comandos |
+| [`deploy/`](deploy/README.md)            | Docker Compose | Ambiente completo: Catalyst, relay, cenas e comunicação        |
 
 ## Visão geral
 
@@ -25,10 +27,10 @@ Esta pasta contém os dois módulos do sistema:
 └──────────────┬──────────────────┘
                │ MQTT
 ┌──────────────▼──────────────────┐
-│ relay-server                    │  GET /healthz, GET /api/state
+│ relay-server                    │  GET /healthz, GET /api/state, POST /api/command
 │  MQTTLink ── Hub ── Server      │
 └──────────────┬──────────────────┘
-               │ WebSocket /ws/scene  (telemetry, status, command, ack, error)
+               │ WebSocket /ws/scene ou HTTP (consulta + POST /api/command)
 ┌──────────────▼──────────────────┐
 │ Cena do Decentraland            │  (ou cmd/scene-sim para testes)
 └─────────────────────────────────┘
@@ -65,6 +67,22 @@ origem do movimento.
 O protocolo completo está em
 [`relay-server/docs/protocolo.md`](relay-server/docs/protocolo.md).
 
+### Modelo 3D
+
+O Decentraland só move um `.glb` como um bloco único, então o modelo do braço
+foi dividido em seis partes móveis, cada uma com a origem no eixo da sua
+junta, e remontado na cena com entidades aninhadas que giram conforme a
+telemetria do relay. O processo está em
+[`scene/docs/modelo.md`](scene/docs/modelo.md).
+
+### Implantação
+
+No servidor do projeto, a cena está publicada no Catalyst (parcela 30,30) e o
+relay roda em Docker atrás do nginx do Catalyst, em
+`https://kiriland.unb.br/robotarm/`. Como o proxy TLS da
+universidade não repassa WebSocket, a cena publicada usa o modo HTTP. Detalhes
+em [`relay-server/docs/implantacao.md`](relay-server/docs/implantacao.md).
+
 ## Execução do sistema completo
 
 Pré-requisitos: Go ≥ 1.22, Mosquitto, `arduino-cli` (com os *cores* ESP8266 e
@@ -84,8 +102,9 @@ ESP32) — detalhes em [`robot/docs/firmware.md`](robot/docs/firmware.md) e
    cp config.example.h config.h   # preencha WiFi e MQTT_HOST (IP do broker)
    make upload PORT=/dev/ttyUSB0
    ```
-4. **Cena:** conecte em `ws://<ip-do-relay>:8080/ws/scene?token=segredo`, ou
-   use o simulador: `go run ./cmd/scene-sim -token segredo`.
+4. **Cena:** `cd scene && npm install && npm start` (ajuste `RELAY_URL` e
+   `SCENE_TOKEN` em `scene/src/config.ts`; ver [testes da cena](scene/docs/testes.md)),
+   ou use o simulador: `go run ./cmd/scene-sim -token segredo`.
 
 ## Teste ponta a ponta sem hardware
 

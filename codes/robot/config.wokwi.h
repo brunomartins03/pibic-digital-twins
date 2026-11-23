@@ -10,6 +10,7 @@
 
 #define MQTT_HOST         "broker.emqx.io"
 #define MQTT_PORT         1883
+#define MQTT_TLS          0
 #define MQTT_USERNAME     ""
 #define MQTT_PASSWORD     ""
 #define MQTT_CLIENT_ID    "robotarm-sim"

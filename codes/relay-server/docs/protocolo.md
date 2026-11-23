@@ -103,6 +103,11 @@ braço já chegou à posição: a confirmação real é a `telemetry` subsequent
 |-------------------|-----------------------------------------------------------------|
 | `GET /healthz`    | `{"ok":true,"deviceOnline":<bool>}`                              |
 | `GET /api/state`  | Último `ArmState` recebido, ou `204 No Content` se ainda não houver |
+| `POST /api/command` | Corpo: o mesmo envelope `command` do WebSocket. Resposta: envelope `ack` (200) ou `error` (400); exige `?token=` quando configurado |
 
-As rotas HTTP aceitam CORS de qualquer origem e não exigem token, pois são
+`/api/command` existe para cenas que não conseguem manter um WebSocket (por
+exemplo, atrás de um proxy que não repassa o *upgrade*): elas consultam
+`/healthz` e `/api/state` periodicamente e enviam comandos por `POST`.
+
+As rotas HTTP aceitam CORS de qualquer origem. As rotas `GET` não exigem token, pois são
 somente leitura.

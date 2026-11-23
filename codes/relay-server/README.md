@@ -8,6 +8,7 @@ encaminha os comandos das cenas para o braço.
 ```bash
 go test ./...                                  # testes
 MQTT_BROKER=tcp://localhost:1883 go run ./cmd/relay
+docker compose up -d --build                   # em contêiner (configure .env)
 go run ./cmd/scene-sim                         # cena do Decentraland simulada
 ```
 
@@ -19,6 +20,7 @@ go run ./cmd/scene-sim                         # cena do Decentraland simulada
 | [Protocolo](docs/protocolo.md)              | Tópicos MQTT, mensagens WebSocket e endpoints HTTP         |
 | [Operação](docs/operacao.md)                | Instalação do broker, configuração e execução             |
 | [Testes](docs/testes.md)                    | Testes unitários, de integração e ponta a ponta (Wokwi)    |
+| [Implantação](docs/implantacao.md)          | Docker, rota no nginx do Catalyst e o proxy da universidade |
 
 ## Estrutura
 
@@ -28,5 +30,7 @@ relay-server/
 │   ├── relay/        # executável do servidor
 │   └── scene-sim/    # cliente que simula uma cena do Decentraland
 ├── internal/relay/   # protocolo, hub, servidor WebSocket/HTTP e link MQTT
+├── Dockerfile
+├── compose.yaml      # contêiner para o servidor do projeto (.env.example)
 └── docs/
 ```

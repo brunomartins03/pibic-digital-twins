@@ -55,7 +55,7 @@ private:
   float current_[JOINT_COUNT + 1];
   float target_[JOINT_COUNT + 1];
 
-  uint8_t stepDeg_ = 5;
+  uint8_t stepDeg_ = 20;
   float maxStepPerTick_ = 2.0f;
   uint16_t tickMs_ = 20;
   unsigned long lastTickMs_ = 0;

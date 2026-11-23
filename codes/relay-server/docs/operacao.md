@@ -67,6 +67,21 @@ curl localhost:8080/healthz      # {"deviceOnline":true,"ok":true}
 curl localhost:8080/api/state    # último estado do braço
 ```
 
+### Docker
+
+```bash
+cp .env.example .env         # ajuste broker, prefixo e token
+docker compose up -d --build
+docker compose logs -f
+```
+
+A imagem (Alpine, ~23 MB) roda como usuário sem privilégios e tem
+*healthcheck* em `/healthz`. O `compose.yaml` publica a porta em
+`HOST_BIND:HOST_PORT` (padrão `172.20.0.1:8080`, o gateway da rede Docker do
+Catalyst; ver [implantação](implantacao.md#1-relay-em-docker)). Dentro do
+contêiner, `localhost` é o próprio contêiner: um broker na máquina hospedeira
+deve ser acessado por um IP dela.
+
 ## 4. Simulador de cena
 
 `scene-sim` substitui a cena do Decentraland durante o desenvolvimento.
@@ -88,6 +103,15 @@ go run ./cmd/scene-sim -send "45 120 60 10;home" -interval 5s -wait 10s   # rote
 
 Na cena, abra um WebSocket para `ws://<ip-do-relay>:8080/ws/scene?token=...`,
 atualize o modelo 3D a cada `telemetry` e envie `command` com o estado
-completo desejado (veja o [protocolo](protocolo.md)). Cenas publicadas fora do
-modo de pré-visualização exigem `wss://`: nesse caso, exponha o relay por trás
-de um proxy reverso com TLS (por exemplo, Caddy ou Nginx).
+completo desejado (veja o [protocolo](protocolo.md)). Se o WebSocket não for
+possível, consulte `/healthz` e `/api/state` periodicamente e envie comandos
+por `POST /api/command`. A cena em [`scene/`](../../scene/README.md) suporta
+os dois modos.
+
+Cenas publicadas fora do modo de pré-visualização exigem `https://`/`wss://`:
+exponha o relay por trás de um proxy reverso com TLS.
+
+No servidor do projeto, o relay é publicado em
+`https://kiriland.unb.br/robotarm/` pelo nginx do Catalyst; a
+configuração, o problema do proxy da universidade com WebSocket e o teste
+ponta a ponta estão em [implantação](implantacao.md).

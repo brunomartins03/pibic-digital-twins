@@ -13,6 +13,13 @@
 #include "ArmController.h"
 #include "MqttLink.h"
 
+#if MQTT_TLS
+#include "mqtt_ca.h"
+#define MQTT_CA MQTT_CA_CERT
+#else
+#define MQTT_CA nullptr
+#endif
+
 namespace {
 constexpr unsigned long WIFI_SETUP_TIMEOUT_MS = 15000;
 
@@ -64,7 +71,10 @@ void publishStateIfNeeded() {
 
 void handleSerialInput() {
   while (Serial.available() > 0) {
-    arm.applyKey((char)Serial.read()); // newlines and unknown keys are ignored
+    char key = (char)Serial.read();
+    // Newlines and unknown keys are ignored; known ones are echoed so a
+    // stuck arm can be told apart from keys that never reached the board.
+    if (arm.applyKey(key)) Serial.printf("[serial] key %c\n", key);
   }
 }
 
@@ -87,7 +97,7 @@ void setup() {
   connectWiFi();
 
   mqtt.onCommand([](const ArmState &target) { arm.setTargets(target); });
-  mqtt.begin({MQTT_HOST, MQTT_PORT, MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD, MQTT_TOPIC_PREFIX});
+  mqtt.begin({MQTT_HOST, MQTT_PORT, MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD, MQTT_TOPIC_PREFIX, MQTT_CA});
 
   printHelp();
 }

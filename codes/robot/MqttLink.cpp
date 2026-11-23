@@ -3,8 +3,16 @@
 
 namespace {
 constexpr unsigned long RECONNECT_INTERVAL_MS = 5000;
+// connect() blocks loop(), so servo motion and Serial keys freeze while it
+// runs. The ESP8266 defaults (15 s for DNS, TCP and the TLS handshake each,
+// plus 15 s for the CONNACK) could stall the arm for close to a minute.
+constexpr unsigned long CLIENT_TIMEOUT_MS = 5000;
+constexpr uint16_t MQTT_SOCKET_TIMEOUT_S = 5;
 constexpr const char *STATUS_ONLINE = "online";
 constexpr const char *STATUS_OFFLINE = "offline";
+// Certificates are checked against the clock: before NTP sets it (any time
+// earlier than 2023-11-14), a TLS handshake would fail, so it is not tried.
+constexpr time_t MIN_VALID_TIME = 1700000000;
 } // namespace
 
 void MqttLink::begin(const Config &config) {
@@ -17,6 +25,23 @@ void MqttLink::begin(const Config &config) {
   // other off the broker by sharing a client ID.
   clientId_ = String(config.clientId) + "-" + String((uint32_t)random(0x10000), HEX);
 
+  if (config.caCert) {
+#if defined(ESP32)
+    tlsClient_.setCACert(config.caCert);
+#else
+    trustAnchors_.append(config.caCert);
+    tlsClient_.setTrustAnchors(&trustAnchors_);
+#endif
+    configTime(0, 0, "pool.ntp.org", "time.nist.gov"); // syncs once WiFi is up
+    mqtt_.setClient(tlsClient_);
+  } else {
+    mqtt_.setClient(plainClient_);
+  }
+#if !defined(ESP32)
+  tlsClient_.setTimeout(CLIENT_TIMEOUT_MS);
+  plainClient_.setTimeout(CLIENT_TIMEOUT_MS);
+#endif
+  mqtt_.setSocketTimeout(MQTT_SOCKET_TIMEOUT_S);
   mqtt_.setServer(config.host, config.port);
   mqtt_.setCallback([this](char *topic, uint8_t *payload, unsigned int length) {
     handleMessage(topic, payload, length);
@@ -27,17 +52,24 @@ void MqttLink::loop() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   if (!mqtt_.connected()) {
-    unsigned long now = millis();
-    if (hasAttempted_ && now - lastAttemptMs_ < RECONNECT_INTERVAL_MS) return;
+    if (hasAttempted_ && millis() - lastAttemptMs_ < RECONNECT_INTERVAL_MS) return;
     hasAttempted_ = true;
-    lastAttemptMs_ = now;
-    if (!connect()) return;
+    bool ok = connect();
+    // Wait from the end of the attempt: counting from its start, an attempt
+    // slower than the interval was retried at once and loop() never ran.
+    lastAttemptMs_ = millis();
+    if (!ok) return;
   }
   mqtt_.loop();
 }
 
 bool MqttLink::connect() {
-  Serial.printf("[mqtt] connecting to %s:%u as %s\n", config_.host, config_.port, clientId_.c_str());
+  if (config_.caCert && time(nullptr) < MIN_VALID_TIME) {
+    Serial.println("[mqtt] waiting for NTP time to validate the broker certificate");
+    return false;
+  }
+  Serial.printf("[mqtt] connecting to %s:%u%s as %s\n", config_.host, config_.port,
+                config_.caCert ? " (TLS)" : "", clientId_.c_str());
 
   const char *user = (config_.username && *config_.username) ? config_.username : nullptr;
   const char *pass = user ? config_.password : nullptr;
