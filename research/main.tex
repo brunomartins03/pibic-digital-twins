@@ -8,6 +8,8 @@
 \usepackage{indentfirst}
 \usepackage{subcaption}
 \usepackage{threeparttable}
+\usepackage{tikz} % Diagrama de arquitetura
+\usetikzlibrary{arrows.meta,fit,backgrounds}
 \onehalfspacing % Espaçamento 1,5 (padrão ABNT)
 
 % ---------- PACOTES DE CITAÇÃO E BIBLIOGRAFIA (ABNT) ----------
@@ -53,7 +55,7 @@
 % ---------- RESUMO ----------
 \section*{Resumo}
 
-No contexto do Laboratório de Desenvolvimento de Sistemas (LDS) da Faculdade de Ciências e Tecnologias em Engenharia da Universidade de Brasília (FCTE/UnB), o compartilhamento do espaço físico e dos equipamentos entre diferentes disciplinas, turmas e horários constitui um problema recorrente. Este trabalho de Iniciação Científica tem como objetivo propor e prototipar a construção de um gêmeo digital do LDS na plataforma de metaverso descentralizado Decentraland, estabelecendo um canal de comunicação bidirecional entre o avatar do estudante e o equipamento físico correspondente. A pesquisa, de natureza aplicada e abordagem qualitativa e quantitativa, combinou um levantamento bibliográfico sistemático sobre metaverso educacional, gêmeos digitais e laboratórios virtuais/remotos com o desenvolvimento de uma prova de conceito. Os resultados demonstram a viabilidade técnica da sincronização bidirecional em tempo quase real entre o equipamento físico e sua representação virtual, corroborando as arquiteturas em camadas apontadas pela literatura como estratégia dominante para a implementação de gêmeos digitais em ambientes de metaverso, ao mesmo tempo em que contribuem para o preenchimento de uma lacuna identificada na literatura quanto à escassez de implementações educacionais que integrem, de forma avaliada, sincronização de gêmeos digitais, comunicação via IoT e interfaces imersivas. Conclui-se que a proposta é tecnicamente viável em escala reduzida, servindo de base para sua futura expansão ao contexto completo do LDS e para investigações posteriores sobre seu impacto pedagógico.
+No contexto do Laboratório de Desenvolvimento de Sistemas (LDS) da Faculdade de Ciências e Tecnologias em Engenharia da Universidade de Brasília (FCTE/UnB), o compartilhamento do espaço físico e dos equipamentos entre diferentes disciplinas, turmas e horários constitui um problema recorrente. Este trabalho de Iniciação Científica tem como objetivo propor e prototipar a construção de um gêmeo digital do LDS na plataforma de metaverso descentralizado Decentraland, estabelecendo um canal de comunicação bidirecional entre o avatar do estudante e o equipamento físico correspondente. A pesquisa, de natureza aplicada e abordagem qualitativa e quantitativa, combinou um levantamento bibliográfico sistemático sobre metaverso educacional, gêmeos digitais e laboratórios virtuais/remotos com o desenvolvimento de uma prova de conceito. A prova de conceito consistiu em um gêmeo digital de um braço robótico de quatro servomotores, controlado por um microcontrolador ESP8266 que se comunica por MQTT com um servidor de retransmissão desenvolvido em Go, o qual, por sua vez, sincroniza o equipamento com uma cena publicada em um servidor Catalyst do próprio projeto. Os resultados parciais, obtidos em validação ponta a ponta com o firmware executado em um microcontrolador simulado e confirmados em testes com o braço físico, demonstram a viabilidade técnica da sincronização bidirecional em tempo quase real entre o equipamento e sua representação virtual, corroborando as arquiteturas em camadas apontadas pela literatura como estratégia dominante para a implementação de gêmeos digitais em ambientes de metaverso, ao mesmo tempo em que contribuem para o preenchimento de uma lacuna identificada na literatura quanto à escassez de implementações educacionais que integrem, de forma avaliada, sincronização de gêmeos digitais, comunicação via IoT e interfaces imersivas. Conclui-se que a proposta é tecnicamente viável em escala reduzida, servindo de base para sua futura expansão ao contexto completo do LDS e para investigações posteriores sobre seu impacto pedagógico.
  
 \vspace{0.5cm}
 \noindent \textbf{Palavras-chave:} metaverso; gêmeo digital; laboratório remoto; Decentraland; braço robótico.
@@ -195,7 +197,88 @@ Os artigos identificados a partir das strings de busca foram avaliados segundo o
 
 No contexto da engenharia de software, provas de conceito são ferramentas essenciais para demonstrar as capacidades e a adequação de um software, bem como demonstrar que um conceito é factível \cite[p.~1]{kottapalle_poc}. Nesse sentido, como prova de conceito para validar a viabilidade técnica da proposta, definiu-se o desenvolvimento de um gêmeo digital com sincronização bidirecional de um pequeno braço robótico, controlado por um microcontrolador ESP8266 e composto por quatro servomotores do tipo SG90. Essa prova de conceito antecede a aplicação da estratégia ao contexto completo do LDS, permitindo validar, em escala reduzida e controlada, os mecanismos de comunicação e sincronização que fundamentam a proposta descrita na Seção \ref{intro}.
 
-Os resultados da prova de conceito são apresentados na seção \ref{res:poc}
+Os resultados da prova de conceito são apresentados na Subseção \ref{res:poc}. Nas subseções seguintes, descrevem-se os materiais, as ferramentas e o processo de desenvolvimento e verificação empregados em sua construção.
+
+\subsubsection{Materiais}
+\label{subsec:materiais}
+
+A Tabela \ref{tab:hardware} relaciona os componentes físicos empregados na montagem do braço robótico. Optou-se deliberadamente por componentes de baixo custo e ampla disponibilidade no mercado nacional, de modo a favorecer a replicabilidade da prova de conceito em outros laboratórios e disciplinas.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \caption{Componentes físicos da prova de conceito. Fonte: Autor, 2026.}
+    \begin{tabular}{| p{3.6cm} | p{0.7cm} | p{5.6cm} | p{3.2cm} |}
+        \hline
+        \textbf{Componente} & \textbf{Qtd.} & \textbf{Especificação} & \textbf{Função} \\ \hline
+        Placa de desenvolvimento NodeMCU (ESP8266, módulo ESP-12E) & 1 & Microcontrolador Tensilica L106 de 32 bits, 80~MHz, Wi-Fi IEEE 802.11 b/g/n (2,4~GHz), lógica de 3,3~V & Geração dos sinais PWM e comunicação em rede \\ \hline
+        Servomotor SG90 & 4 & Alimentação de 4,8 a 6~V, sinal PWM de 50~Hz, curso aproximado de 180\textdegree & Atuação da base, do ombro, do cotovelo e da garra \\ \hline
+        Estrutura em MDF & 1 & Kit cortado a laser para quatro servomotores SG90 & Sustentação mecânica e cinemática do braço \\ \hline
+        Protoboard & 1 & Matriz de contatos sem solda & Distribuição de alimentação e de terra \\ \hline
+        Módulo de alimentação para protoboard & 1 & Entrada por conector P4 ou USB; saídas reguladas de 3,3~V e 5~V & Alimentação dos servomotores, independente da placa \\ \hline
+        Jumpers macho-macho e macho-fêmea & -- & Fios de conexão rígidos e flexíveis & Interligação entre placa, protoboard e servomotores \\ \hline
+        Cabo USB & 1 & -- & Gravação do firmware e monitoramento serial \\ \hline
+    \end{tabular}
+    \label{tab:hardware}
+\end{table}
+
+A ligação elétrica é sintetizada na Tabela \ref{tab:pinos}. Os condutores de alimentação (vermelho) e de terra (marrom) dos quatro servomotores são conectados aos barramentos da protoboard alimentados pelo módulo de alimentação, enquanto o condutor de sinal (laranja) de cada servomotor é ligado a um pino de entrada e saída de propósito geral (GPIO) do ESP8266. O terra do módulo de alimentação e o terra da placa são interligados (terra comum), condição indispensável para que o sinal PWM gerado pelo microcontrolador possua referência de tensão comum à dos servomotores.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \caption{Mapeamento entre servomotores e pinos do ESP8266. Fonte: Autor, 2026.}
+    \begin{tabular}{| l | l | l | l |}
+        \hline
+        \textbf{Servomotor} & \textbf{Grau de liberdade} & \textbf{Pino da NodeMCU} & \textbf{GPIO} \\ \hline
+        Base & Rotação em torno do eixo vertical & D1 & 5 \\ \hline
+        Ombro & Elevação do braço & D2 & 4 \\ \hline
+        Cotovelo & Elevação do antebraço & D5 & 14 \\ \hline
+        Garra & Abertura e fechamento das pinças & D6 & 12 \\ \hline
+    \end{tabular}
+    \label{tab:pinos}
+\end{table}
+
+A escolha dos pinos não foi arbitrária. Evitaram-se os GPIOs 0, 2 e 15, denominados pinos de \textit{strapping}, cujo nível lógico no instante da reinicialização determina o modo de inicialização do ESP8266 -- de modo que uma carga conectada a eles poderia impedir a partida normal do firmware --, bem como o GPIO 16, que não suporta a geração de PWM. Cumpre observar que o ESP8266 não dispõe de periféricos dedicados de PWM em número suficiente, sendo os pulsos de controle dos servomotores gerados por temporização em software pela biblioteca \texttt{Servo} do núcleo Arduino para essa plataforma.
+
+Quanto à alimentação, os quatro servomotores, quando partem simultaneamente ou permanecem bloqueados mecanicamente, podem demandar em conjunto correntes superiores a 1~A. Por essa razão, eles não são alimentados pelo regulador de 3,3~V da placa nem pelo pino de 5~V derivado da porta USB: as quedas de tensão decorrentes provocariam reinicializações espúrias do microcontrolador (\textit{brownout}). Adotou-se, assim, o módulo de alimentação da protoboard como fonte exclusiva dos servomotores. Ressalva-se que a capacidade de corrente do regulador linear presente nesse tipo de módulo é limitada, de modo que, em uma eventual versão definitiva, recomenda-se uma fonte dedicada de 5~V com capacidade de ao menos 2~A.
+
+\subsubsection{Ferramentas de software}
+\label{subsec:ferramentas}
+
+A Tabela \ref{tab:software} apresenta as tecnologias empregadas em cada componente da solução, com as respectivas versões validadas.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \caption{Tecnologias e versões empregadas na prova de conceito. Fonte: Autor, 2026.}
+    \begin{tabular}{| p{3.2cm} | p{10cm} |}
+        \hline
+        \textbf{Componente} & \textbf{Tecnologias} \\ \hline
+        Firmware & C++ sobre o \textit{framework} Arduino; núcleo \texttt{esp8266:esp8266} 3.1.2; bibliotecas PubSubClient 2.8 (cliente MQTT) e ArduinoJson 7.4.3; compilação e gravação com \texttt{arduino-cli} automatizadas por \texttt{Makefile} \\ \hline
+        Simulação do dispositivo & Wokwi \cite{wokwi}; núcleo \texttt{esp32:esp32} 4.0.0; biblioteca ESP32Servo 3.2.1 \\ \hline
+        Servidor de retransmissão & Linguagem Go (versão mínima 1.22); bibliotecas Eclipse Paho MQTT 1.4.3 e Gorilla WebSocket 1.5.3; conteinerização com Docker e Docker Compose \\ \hline
+        Broker MQTT & EMQX Serverless (ambiente implantado); Mosquitto (desenvolvimento local); broker público \texttt{broker.emqx.io} (testes com o simulador) \\ \hline
+        Cena virtual & TypeScript; Decentraland SDK7 7.33.0 \cite{decentraland_sdk}, com interface gráfica em React-ECS \\ \hline
+        Modelo tridimensional & Blender (modelagem preliminar); glTF-Transform e meshoptimizer (divisão e simplificação do modelo glTF \cite{gltf_spec}) \\ \hline
+        Gestão do código & Git, com mensagens no padrão \textit{Conventional Commits} \\ \hline
+    \end{tabular}
+    \label{tab:software}
+\end{table}
+
+\subsubsection{Processo de desenvolvimento e verificação}
+\label{subsec:processo}
+
+O desenvolvimento seguiu um processo incremental, no qual cada um dos três módulos de software -- firmware, servidor de retransmissão e cena virtual -- foi construído e verificado de forma independente, tendo como único ponto de acoplamento um protocolo de mensagens explicitamente documentado (Subseção \ref{subsec:protocolo}). Esse desacoplamento permitiu que cada módulo fosse exercitado por meio de substitutos dos demais, de modo que o avanço do projeto não dependesse da disponibilidade simultânea do hardware, do servidor e do cliente do Decentraland.
+
+A verificação foi organizada em quatro níveis complementares:
+
+\begin{enumerate}
+    \item \textbf{Testes unitários} do servidor de retransmissão, executados sem broker real por meio de um publicador de comandos falso, cobrindo a validação das mensagens, a difusão de telemetria para múltiplas cenas, o encaminhamento de comandos, a autenticação e as rotas HTTP, sempre sob o detector de condições de corrida da linguagem Go (\texttt{go test -race});
+    \item \textbf{Teste de integração} com um broker MQTT real, no qual o próprio teste desempenha o papel do dispositivo, publicando estados e status e verificando a recepção dos comandos;
+    \item \textbf{Emulação dos extremos do sistema}: do lado virtual, um cliente de linha de comando (\texttt{scene-sim}) reproduz o comportamento de uma cena do Decentraland; do lado físico, o firmware real é executado em um microcontrolador simulado no Wokwi \cite{wokwi} ou, alternativamente, um dispositivo fictício é emulado por mensagens publicadas manualmente no broker;
+    \item \textbf{Teste ponta a ponta}, envolvendo o firmware em execução no simulador ou na placa física, o broker, o servidor de retransmissão implantado e a cena publicada e acessada pelo cliente web do Decentraland.
+\end{enumerate}
 
 % ---------- RESULTADOS E DISCUSSÃO ----------
 \section{Resultados e Discussão}
@@ -203,35 +286,297 @@ Os resultados da prova de conceito são apresentados na seção \ref{res:poc}
 \subsection{Da prova de conceito}
 \label{res:poc}
 
-A arquitetura da solução foi composta por três elementos principais: (i) o braço robótico físico, cujos servomotores foram controlados pelo ESP8266; (ii) um servidor de retransmissão (\textit{relay/bridge server}), desenvolvido na linguagem Go, responsável por intermediar a comunicação entre o equipamento físico e o ambiente virtual; e (iii) a cena correspondente no Decentraland, que representa o gêmeo digital do braço robótico. A comunicação entre a ESP8266 e o servidor de retransmissão ocorreu por meio do protocolo \textit{Message Queuing Telemetry Transport} (MQTT), amplamente utilizado em aplicações de Internet das Coisas (IoT) por seu baixo consumo de recursos e adequação a comunicações em tempo quase real. Tanto o servidor de retransmissão quanto a cena do Decentraland foram executados em uma máquina Linux local (\textit{on-premises}), o que permitiu maior controle sobre a infraestrutura durante a fase de prototipagem (Figura \ref{fig:system_design}).
+Esta subseção descreve, em ordem ascendente de abstração, a solução construída como prova de conceito: da camada física do braço robótico ao firmware embarcado, ao protocolo de comunicação, ao servidor de retransmissão e à cena no Decentraland, seguidos de sua implantação, dos resultados parciais da validação e das principais dificuldades enfrentadas.
+
+\subsubsection{Visão geral da arquitetura}
+\label{subsec:arquitetura}
+
+A concepção inicial da arquitetura (Figura \ref{fig:system_design}) previa três elementos: (i) o braço robótico físico, cujos servomotores seriam controlados pelo ESP8266; (ii) um servidor de retransmissão (\textit{relay server}), desenvolvido na linguagem Go, que abrigaria o broker MQTT e a lógica de sincronização; e (iii) a cena no Decentraland, comunicando-se com o servidor exclusivamente por WebSocket \cite{rfc6455}.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.75\textwidth]{poc.png}
-    \caption{Arquitetura geral do sistema proposto. Fonte: Autor, 2026.}
+    \includegraphics[width=\textwidth]{poc.png}
+    \caption{Concepção inicial da arquitetura do sistema proposto. Fonte: Autor, 2026.}
     \label{fig:system_design}
 \end{figure}
 
-A sincronização proposta foi bidirecional: alterações realizadas no braço robótico físico — sejam elas comandadas manualmente ou por meio de um script de controle — deveriam refletir em tempo real na representação do braço no ambiente virtual, e, reciprocamente, comandos emitidos por um avatar no Decentraland devem ser transmitidos ao equipamento físico, provocando a movimentação correspondente dos servomotores. Para viabilizar múltiplos espectadores e/ou controladores simultâneos do gêmeo digital, adotou-se a estratégia de resolução de conflitos \textit{last command wins} (o último comando recebido prevalece), dispensando, assim, mecanismos mais complexos de fila ou bloqueio (\textit{locking}) de comandos concorrentes.
+Ao longo do desenvolvimento, essa concepção foi refinada em dois aspectos. Em primeiro lugar, o broker MQTT foi separado do servidor de retransmissão e passou a constituir um elemento independente, de modo que dispositivo e servidor se comunicam apenas indiretamente, por meio do modelo publicação/assinatura (\textit{publish/subscribe}). Em segundo lugar, além do WebSocket, o servidor passou a oferecer uma interface HTTP equivalente, motivada por restrições da infraestrutura de rede da universidade (Subseção \ref{subsec:dificuldades}). A arquitetura resultante é, portanto, composta por quatro elementos encadeados:
+
+\begin{enumerate}
+    \item o \textbf{dispositivo físico} -- ESP8266 e quatro servomotores --, que se comunica por MQTT \cite{mqtt_oasis} sobre Wi-Fi;
+    \item o \textbf{broker MQTT}, ponto de encontro entre dispositivo e servidor;
+    \item o \textbf{servidor de retransmissão}, que traduz as mensagens MQTT para WebSocket ou HTTP, valida comandos e mantém em memória o último estado conhecido do braço;
+    \item a \textbf{cena do Decentraland}, que exibe o gêmeo digital e oferece ao avatar um painel de comandos.
+\end{enumerate}
+
+A Figura \ref{fig:arquitetura} apresenta a arquitetura atual tal como implantada, incluindo os elementos de infraestrutura -- o servidor web nginx do Catalyst e o proxy TLS da universidade -- interpostos entre o servidor de retransmissão e o cliente do Decentraland, cujas implicações são discutidas nas Subseções \ref{subsec:implantacao} e \ref{subsec:dificuldades}.
+
+\begin{figure}[htbp]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        font=\small,
+        box/.style={draw, rounded corners=2pt, align=center, text width=3cm, minimum height=1.3cm, fill=white},
+        aux/.style={draw, rounded corners=2pt, align=center, text width=2.4cm, minimum height=0.9cm, fill=white, font=\footnotesize},
+        group/.style={draw, dashed, rounded corners=4pt, inner sep=8pt, fill=gray!10},
+        gtitle/.style={font=\footnotesize\bfseries, align=center},
+        link/.style={{Latex[length=2mm]}-{Latex[length=2mm]}, thick},
+        one/.style={-{Latex[length=2mm]}, thick},
+        lab/.style={font=\scriptsize, align=center, fill=white, inner sep=1.5pt}
+    ]
+        % Ambiente físico
+        \node[box] (esp) at (0,0) {\textbf{ESP8266 (NodeMCU)}\\firmware C++/Arduino};
+        \node[box] (servos) at (0,-2.6) {\textbf{4 servomotores SG90}\\base, ombro,\\cotovelo e garra};
+        \node[gtitle] (tphys) at (0,-3.95) {Ambiente físico (gêmeo real)};
+        \node[aux] (serial) at (0,2.6) {Controle local\\(porta serial)};
+
+        % Broker
+        \node[box] (broker) at (5,0) {\textbf{Broker MQTT}\\EMQX Serverless\\(serviço gerenciado)};
+
+        % Máquina virtual da universidade
+        \node[box] (relay) at (10,0) {\textbf{Servidor de retransmissão}\\Go, contêiner Docker};
+        \node[box] (catalyst) at (14.4,0) {\textbf{Catalyst}\\conteúdo da cena\\(parcela 30,30)};
+        \node[box] (nginx) at (12.2,2.6) {\textbf{nginx do Catalyst}\\proxy reverso};
+        \node[gtitle] (tvm) at (12.2,-1.35) {Máquina virtual da universidade};
+
+        % Acesso do usuário
+        \node[box] (proxy) at (12.2,5.4) {\textbf{Proxy TLS da universidade}};
+        \node[box] (client) at (5,5.4) {\textbf{Cliente web do Decentraland}\\gêmeo digital (cena SDK7)\\e painel de comandos};
+
+        % Grupos
+        \begin{scope}[on background layer]
+            \node[group, fit=(esp)(servos)(tphys)] {};
+            \node[group, fit=(relay)(catalyst)(nginx)(tvm)] {};
+        \end{scope}
+
+        % Ligações
+        \draw[one] (serial) -- node[lab, right] {USB} (esp);
+        \draw[one] (esp) -- node[lab, right] {PWM 50~Hz} (servos);
+        \draw[link] (esp) -- node[lab, above=3pt] {MQTT/TLS\\(8883), Wi-Fi}
+                               node[lab, below=3pt] {$\rightarrow$ \texttt{state}\\$\rightarrow$ \texttt{status}\\$\leftarrow$ \texttt{cmd}} (broker);
+        \draw[link] (broker) -- node[lab, above=3pt] {MQTT sobre\\WSS (8084)} (relay);
+        \draw[link] (nginx) -- node[lab, left=2pt] {\texttt{/robotarm/}} (relay);
+        \draw[link] (nginx) -- node[lab, right=2pt] {\texttt{/content}} (catalyst);
+        \draw[link] (proxy) -- node[lab, right] {HTTP} (nginx);
+        \draw[link] (client) -- node[lab, above=3pt] {HTTPS}
+                                node[lab, below=3pt] {consulta a cada 0,2~s\\e \texttt{POST /api/command}} (proxy);
+    \end{tikzpicture}%
+    }
+    \caption{Arquitetura atual do sistema, tal como implantada. As setas duplas indicam comunicação bidirecional. Nos testes sem hardware, o ESP8266 é substituído por um ESP32 simulado no Wokwi, conectado a um broker público. Fonte: Autor, 2026.}
+    \label{fig:arquitetura}
+\end{figure}
+
+Dois fluxos de dados atravessam essa cadeia. No fluxo \textbf{físico $\rightarrow$ virtual}, uma alteração no alvo de uma junta -- originada de um comando local pela porta serial ou de um comando remoto -- faz o firmware mover o servomotor gradualmente; a cada mudança do ângulo efetivo, o novo estado é publicado no broker, recebido pelo servidor e repassado a todas as cenas conectadas. No fluxo \textbf{virtual $\rightarrow$ físico}, a cena envia um comando ao servidor, que o valida, publica-o no broker e responde com uma confirmação; o firmware recebe o comando, move o braço e a telemetria resultante fecha o ciclo.
+
+Um princípio fundamental perpassa ambos os fluxos: o estado publicado pelo dispositivo é sempre o ângulo \textbf{efetivamente escrito} nos servomotores, e não o ângulo-alvo solicitado. Dessa forma, o gêmeo virtual converge para a pose do braço físico independentemente da origem do movimento, e a cena jamais exibe uma pose que o equipamento ainda não atingiu.
+
+\subsubsection{Camada física}
+\label{subsec:camada_fisica}
+
+O braço robótico montado (Figura \ref{fig:robot1}) possui três juntas rotacionais -- base, ombro e cotovelo -- e uma garra, totalizando quatro graus de liberdade atuados, cada um por um servomotor SG90. A base gira o conjunto em torno do eixo vertical, enquanto ombro e cotovelo giram em torno de eixos horizontais paralelos, posicionando a garra no plano vertical definido pela base. As pinças da garra são acopladas por engrenagens, de modo que um único servomotor as movimenta simetricamente.
 
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.4\textwidth}
         \centering
         \includegraphics[width=\textwidth]{robot1.jpg}
-        \caption{Mini-braço robótico produzido em MDF para a prova de conceito.}
+        \caption{Mini-braço robótico em MDF, com a NodeMCU, a protoboard e o módulo de alimentação.}
         \label{fig:robot1}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{robot2.png}
-        \caption{Modelagem do mini-braço robótico no Blender.}
+        \caption{Modelagem preliminar do mini-braço robótico no Blender.}
         \label{fig:robot2}
     \end{subfigure}
     \caption{Modelagens física e virtual do mini-braço robótico. Fonte: Autor, 2026.}
     \label{fig:robot}
 \end{figure}
+
+Todos os servomotores operam na faixa de 0\textdegree{} a 180\textdegree, com pulsos de controle entre 500~$\mu$s e 2400~$\mu$s em um período de 20~ms (50~Hz), e a posição inicial (\textit{home}) é de 90\textdegree{} em todas as juntas. Uma característica do SG90 com implicações diretas para o gêmeo digital é a ausência de realimentação de posição acessível ao microcontrolador: o servomotor mantém internamente a posição comandada, mas não informa ao ESP8266 sua posição real. Consequentemente, a sincronização é realizada em \textbf{malha aberta} -- o estado reportado corresponde ao ângulo comandado aos servomotores, não a uma medição --, e movimentos impostos manualmente ao braço, ou desvios causados por carga excessiva, não são percebidos pelo gêmeo digital.
+
+\subsubsection{Firmware do microcontrolador}
+\label{subsec:firmware}
+
+O firmware, escrito em C++ sobre o \textit{framework} Arduino, totaliza cerca de 470 linhas, excluídos os arquivos de configuração, e está organizado em três unidades com responsabilidades disjuntas:
+
+\begin{itemize}
+    \item \texttt{ArmController}: detém os quatro servomotores e os ângulos atual e alvo de cada junta, desconhecendo qualquer aspecto de rede;
+    \item \texttt{MqttLink}: mantém a conexão com o broker, interpreta os comandos recebidos e publica estado e status, desconhecendo qualquer aspecto dos servomotores;
+    \item \texttt{robot.ino}: programa principal, que conecta o Wi-Fi, integra as duas unidades anteriores e trata o controle local pela porta serial.
+\end{itemize}
+
+\paragraph{Laço principal não bloqueante.} A cada iteração do laço principal, executam-se, em sequência: a manutenção da conexão MQTT, a leitura das teclas recebidas pela porta serial, a atualização dos servomotores e, quando necessária, a publicação do estado. Nenhuma dessas etapas bloqueia a execução por tempo indeterminado, de modo que o controle local permanece funcional mesmo na ausência de Wi-Fi ou de broker. Na inicialização, a espera pela conexão Wi-Fi é limitada a 15~s, prosseguindo a reconexão em segundo plano.
+
+\paragraph{Controle por alvos e velocidade limitada.} Tanto o controle local quanto o remoto apenas definem \textbf{ângulos-alvo}. A cada intervalo de 20~ms, cada servomotor avança no máximo 2\textdegree{} em direção ao seu alvo, o que corresponde a uma velocidade angular máxima de 100\textdegree/s. Essa estratégia produz movimentos suaves independentemente da origem do comando, reduz picos de corrente decorrentes de partidas bruscas e torna o firmware imune a comandos que solicitem saltos abruptos de posição. Os ângulos-alvo são limitados ao intervalo de 0\textdegree{} a 180\textdegree.
+
+\paragraph{Controle local.} Para fins de depuração e de operação sem rede, o braço pode ser comandado pela porta serial (115200~baud): as teclas Q/A, W/S, E/D e R/F incrementam ou decrementam em 5\textdegree{} os alvos da base, do ombro, do cotovelo e da garra, respectivamente.
+
+\paragraph{Publicação de telemetria.} O estado é publicado somente quando ao menos um ângulo efetivo se altera, respeitado um intervalo mínimo de 100~ms entre publicações (taxa máxima de 10~Hz), e, obrigatoriamente, após cada (re)conexão ao broker, garantindo a ressincronização do servidor. Os ângulos são arredondados para graus inteiros antes da publicação, o que elimina mensagens redundantes decorrentes de variações fracionárias imperceptíveis.
+
+\paragraph{Comunicação MQTT.} Ao se conectar, o dispositivo registra junto ao broker uma mensagem de \textit{last will} (\texttt{offline}), que o próprio broker publica caso o dispositivo desapareça sem se desconectar -- por exemplo, por perda de energia ou de rede --, e publica imediatamente a mensagem \texttt{online}. O identificador de cliente MQTT recebe um sufixo aleatório, evitando que duas placas ou simulações com a mesma configuração se desconectem mutuamente do broker. Comandos malformados ou incompletos são descartados e registrados na porta serial.
+
+\paragraph{Segurança da conexão.} O broker do ambiente implantado aceita apenas conexões cifradas. Para atendê-lo, o firmware estabelece a conexão MQTT sobre TLS, validando o certificado do broker contra a autoridade certificadora raiz embarcada no código. Como a validação de certificados depende da data corrente e o ESP8266 não possui relógio de tempo real, o firmware sincroniza o relógio por NTP e só inicia o \textit{handshake} TLS após essa sincronização. O \textit{handshake}, por sua vez, bloqueia o laço principal por cerca de 1 a 2~s a cada (re)conexão.
+
+\paragraph{Portabilidade.} O mesmo código-fonte compila para o ESP8266 (placa real) e para o ESP32 (simulação), com as únicas diferenças -- bibliotecas de Wi-Fi, de servomotores e de TLS -- isoladas por diretivas de compilação condicional. Na compilação para o ESP8266, o firmware ocupa 29,6~KB de memória RAM (36\% do total disponível); para o ESP32, ocupa 994~KB de memória \textit{flash} (75\%).
+
+\subsubsection{Protocolo de comunicação}
+\label{subsec:protocolo}
+
+O estado do braço é representado, em todos os enlaces, por um mesmo documento JSON contendo os ângulos das três juntas, na ordem fixa \texttt{[base, ombro, cotovelo]}, e o ângulo da garra, todos em graus:
+
+\begin{verbatim}
+    {"joints": [90, 45, 120], "gripper": 30}
+\end{verbatim}
+
+No enlace entre dispositivo e servidor, empregam-se três tópicos MQTT sob um prefixo configurável, descritos na Tabela \ref{tab:topicos}.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \caption{Tópicos MQTT do protocolo. Fonte: Autor, 2026.}
+    \begin{tabular}{| l | p{2.6cm} | c | c | p{4.6cm} |}
+        \hline
+        \textbf{Tópico} & \textbf{Direção} & \textbf{QoS} & \textbf{Retido} & \textbf{Conteúdo} \\ \hline
+        \texttt{<prefixo>/state} & Dispositivo $\rightarrow$ servidor & 0 & Sim & Estado atual (ângulos efetivos) \\ \hline
+        \texttt{<prefixo>/cmd} & Servidor $\rightarrow$ dispositivo & 0 & Não & Estado-alvo (ângulos desejados) \\ \hline
+        \texttt{<prefixo>/status} & Dispositivo $\rightarrow$ servidor & 1 & Sim & \texttt{online} ou \texttt{offline} (\textit{last will}) \\ \hline
+    \end{tabular}
+    \label{tab:topicos}
+\end{table}
+
+No enlace entre servidor e cena, as mensagens são envelopes JSON tipados. Do servidor para a cena, trafegam mensagens de \texttt{telemetry} (estado atual), \texttt{status} (dispositivo conectado ou não), \texttt{ack} (comando aceito e encaminhado) e \texttt{error} (comando rejeitado, com o motivo); da cena para o servidor, trafegam mensagens de \texttt{command}, contendo o estado-alvo e um identificador opcional, devolvido na resposta para correlação. Para as cenas impossibilitadas de manter uma conexão WebSocket, o servidor oferece rotas HTTP equivalentes: \texttt{GET /healthz} (disponibilidade do servidor e status do dispositivo), \texttt{GET /api/state} (último estado conhecido) e \texttt{POST /api/command} (envio de comando, com resposta \texttt{ack} ou \texttt{error}).
+
+O protocolo materializa quatro decisões de projeto:
+
+\begin{enumerate}
+    \item \textbf{Estado completo em cada mensagem.} Comandos e telemetria sempre transportam as quatro grandezas, e não incrementos. As mensagens são, portanto, idempotentes: a perda ou a duplicação de uma mensagem não deixa o gêmeo em estado inconsistente, pois a mensagem seguinte restaura integralmente a pose correta. Por essa razão, admitiu-se o nível de qualidade de serviço 0 (entrega no máximo uma vez) para estado e comandos.
+    \item \textbf{Estado retido, comandos não retidos.} Por ser retido pelo broker, o estado é entregue imediatamente a qualquer assinante recém-conectado, de modo que o servidor conhece a pose atual do braço tão logo se conecta, mesmo após uma reinicialização. Os comandos, ao contrário, não são retidos, para que um comando antigo jamais movimente o braço após uma reinicialização do dispositivo -- comportamento que seria inesperado e potencialmente inseguro.
+    \item \textbf{Último comando prevalece} (\textit{last command wins}). Para viabilizar múltiplos espectadores e controladores simultâneos do gêmeo digital, não há fila nem bloqueio de comandos concorrentes: o braço segue o comando mais recente, proveniente da porta serial ou de qualquer cena. A estratégia dispensa mecanismos de arbitragem mais complexos e é coerente com a idempotência das mensagens.
+    \item \textbf{Confirmação de entrega, não de execução.} Um \texttt{ack} significa que o comando foi validado e entregue ao broker, e não que o braço atingiu a posição solicitada; a confirmação efetiva da execução é a telemetria subsequente, coerentemente com o princípio de que o estado publicado reflete a pose real.
+\end{enumerate}
+
+\subsubsection{Servidor de retransmissão}
+\label{subsec:relay}
+
+O servidor de retransmissão, implementado em Go com cerca de 1.070 linhas de código (incluindo testes), resulta da fusão de duas versões anteriores desenvolvidas em paralelo: a primeira empregava MQTT com estado retido, mas utilizava um formato de mensagens incompatível com o firmware e efetuava escritas concorrentes na mesma conexão WebSocket; a segunda oferecia autenticação, monitoramento de disponibilidade e desligamento gracioso, mas comunicava-se com o dispositivo por WebSocket, abandonando a estratégia baseada em MQTT. A versão final preservou a estrutura da segunda e substituiu o enlace WebSocket com o dispositivo pelo enlace MQTT da primeira, acrescentando a validação de comandos e o monitoramento do status do dispositivo por \textit{last will}.
+
+O código organiza-se em quatro componentes com dependências em sentido único: o \textbf{protocolo} (tipos de mensagens e regras de validação); o \textbf{hub}, que mantém em memória o último estado e o status do dispositivo e os difunde às cenas conectadas; o \textbf{enlace MQTT}, que alimenta o hub com as mensagens do dispositivo e publica os comandos; e o \textbf{servidor HTTP/WebSocket}, que atende as cenas. O servidor depende do enlace MQTT apenas por meio de uma interface abstrata de publicação de comandos, o que permite testá-lo com um publicador falso, sem broker.
+
+Do ponto de vista da concorrência, o hub protege estado, status e conjunto de clientes com uma única exclusão mútua (\textit{mutex}). Cada cena conectada dispõe de uma fila de saída com capacidade para 32 mensagens e de uma única \textit{goroutine} de escrita, por exigência da biblioteca Gorilla WebSocket, que não admite escritas concorrentes em uma mesma conexão. Caso a fila de uma cena se esgote -- indicando um cliente lento --, essa cena é desconectada, em vez de atrasar as demais. O estado inicial é enfileirado para cada nova cena sob a mesma exclusão mútua do registro, garantindo que nenhuma atualização a preceda.
+
+Quanto à robustez, o cliente MQTT reconecta-se automaticamente e renova as assinaturas a cada conexão, inclusive na tentativa inicial, de modo que o servidor pode ser iniciado antes do broker. Mensagens de \textit{ping} enviadas a cada 54~s detectam cenas cujas conexões caíram sem encerramento explícito; mensagens superiores a 4~KiB são recusadas; e os sinais de término do sistema operacional provocam o encerramento gracioso do servidor HTTP. Todo comando é validado -- quantidade de juntas e ângulos no intervalo de 0\textdegree{} a 180\textdegree{} -- e rejeitado com mensagem explicativa caso o dispositivo esteja desconectado.
+
+A configuração é inteiramente realizada por variáveis de ambiente, e o controle de acesso das cenas aos comandos é feito por um \textit{token} compartilhado, opcional. Para a implantação, o servidor é distribuído como imagem Docker baseada em Alpine Linux, com aproximadamente 23~MB, executada por usuário sem privilégios e dotada de verificação periódica de saúde na rota \texttt{/healthz}.
+
+\subsubsection{Modelo tridimensional e cena no Decentraland}
+\label{subsec:cena}
+
+Uma modelagem preliminar do braço foi realizada no Blender (Figura \ref{fig:robot2}). Na versão atual da cena, contudo, adotou-se o modelo ``4-Axis Arm Assembly'', de samoubala, distribuído sob a licença CC-BY-4.0 \cite{samoubala_arm}, cuja geometria reproduz um braço de quatro servomotores com garra acionada por engrenagens, análogo ao kit físico empregado. Em atendimento à licença, a atribuição de autoria é exibida na própria cena, ao lado do braço.
+
+O emprego desse modelo exigiu o enfrentamento de duas restrições da plataforma. Primeiramente, o Decentraland transforma um modelo glTF \cite{gltf_spec} como um bloco único, sem acesso às suas subpartes. Para que cada junta pudesse girar independentemente, desenvolveu-se um \textit{script} que divide o modelo original em seis arquivos, um por parte rígida, cada qual com sua origem posicionada no pivô da respectiva junta -- o eixo de saída do servomotor correspondente --, além de um manifesto que descreve a cadeia cinemática (Tabela \ref{tab:partes}). Na cena, cada parte torna-se uma entidade aninhada à entidade da parte em que está montada, de modo que a rotação de uma junta propaga-se naturalmente às partes subsequentes. O punho do modelo original, que não possui servomotor correspondente no braço físico, foi mantido rígido e incorporado ao antebraço.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \caption{Partes do modelo tridimensional e cadeia cinemática. Fonte: Autor, 2026.}
+    \begin{tabular}{| l | l | p{3.4cm} | c | r |}
+        \hline
+        \textbf{Parte} & \textbf{Montada em} & \textbf{Grandeza associada} & \textbf{Eixo} & \textbf{Triângulos} \\ \hline
+        Base & -- & -- (fixa) & -- & 1.568 \\ \hline
+        Prato giratório & Base & Junta da base & $+y$ & 708 \\ \hline
+        Braço & Prato giratório & Junta do ombro & $-x$ & 640 \\ \hline
+        Antebraço (com punho) & Braço & Junta do cotovelo & $-x$ & 1.878 \\ \hline
+        Pinça acionada & Antebraço & Garra & $+y$ & 3.988 \\ \hline
+        Pinça movida & Antebraço & Garra (sentido oposto) & $+y$ & 716 \\ \hline
+        \multicolumn{4}{| r |}{\textbf{Total}} & \textbf{9.498} \\ \hline
+    \end{tabular}
+    \label{tab:partes}
+\end{table}
+
+Em segundo lugar, uma cena que ocupe uma única parcela do Decentraland está limitada a 10 mil triângulos, ao passo que o modelo original possuía 20.374. O mesmo \textit{script} solda vértices coincidentes, remove dados duplicados e aplica o simplificador de malhas do meshoptimizer, com a mesma razão de redução em todas as partes, até que o total caiba no limite, resultando em 9.498 triângulos. Adicionalmente, como o formato glTF adota um sistema de coordenadas dextrogiro e o Decentraland um sistema levogiro, a cena converte posições e eixos de rotação do manifesto, preservando o sentido dos ângulos.
+
+A conversão entre o ângulo do servomotor e o ângulo de cada junta do modelo segue a relação linear $\theta_{\mathrm{modelo}} = s \cdot (\theta_{\mathrm{servo}} - \theta_{\mathrm{repouso}})$, em que $\theta_{\mathrm{repouso}}$ é o ângulo do servomotor correspondente à pose original do modelo e $s \in \{-1, +1\}$ ajusta o sentido de rotação. Os parâmetros atualmente configurados ($\theta_{\mathrm{repouso}} = 90$\textdegree{} e $s = +1$ para todas as juntas) são provisórios e devem ser calibrados com o braço físico. A rotação das pinças é ainda limitada ao intervalo de $-15$\textdegree{} a $45$\textdegree{}, uma vez que, abaixo desse limite inferior, as pinças do modelo se sobrepõem.
+
+Para suavizar as atualizações de telemetria, recebidas a no máximo 10~Hz, a pose exibida aproxima-se da última pose recebida a uma velocidade máxima de 180\textdegree/s, em vez de saltar diretamente para ela. A cena dispõe, ainda, de um painel de interface que exibe o estado da conexão com o servidor e com o dispositivo, os ângulos atuais e botões para incrementar ou decrementar cada junta em 10\textdegree, além de um botão \textit{Home}, que retorna todas as juntas a 90\textdegree. Cada comando parte da pose real do braço, informada pela telemetria; contudo, durante os 10~s subsequentes a um comando, os novos comandos partem do último alvo enviado, de modo que o acionamento de uma junta não interrompa o movimento de outra ainda em curso.
+
+A comunicação com o servidor pode ocorrer em dois modos, selecionáveis por configuração: no modo WebSocket, o servidor envia as atualizações à cena tão logo elas ocorrem; no modo HTTP, adotado como padrão no ambiente implantado, a cena consulta as rotas \texttt{/healthz} e \texttt{/api/state} a cada 0,2~s e envia comandos por \texttt{POST /api/command}. Em ambos os modos, a cena tenta restabelecer a comunicação a cada 3~s quando o servidor se torna inacessível.
+
+\subsubsection{Implantação}
+\label{subsec:implantacao}
+
+A cena foi publicada em um servidor de conteúdo Catalyst -- componente da arquitetura descentralizada do Decentraland responsável por armazenar e servir as cenas -- mantido pelo próprio projeto em uma máquina virtual da universidade, na parcela (30, 30), distinta das parcelas ocupadas pela modelagem do campus (Figura \ref{fig:fga}). Como esse servidor dispensa a verificação de posse de parcelas na \textit{blockchain}, a publicação pôde ser assinada com chaves descartáveis, sem custo de aquisição de terrenos virtuais.
+
+O servidor de retransmissão é executado em um contêiner Docker na mesma máquina virtual, com sua porta exposta exclusivamente na interface da rede interna do Catalyst, e não nas interfaces públicas da máquina. O acesso externo ocorre por uma rota dedicada no servidor web nginx do Catalyst, que encaminha as requisições ao contêiner, de modo que o servidor de retransmissão compartilha o domínio e o certificado TLS da cena -- requisito da plataforma, que só permite a cenas publicadas acessar endereços \texttt{https://} e \texttt{wss://}.
+
+Por fim, adotou-se como broker uma implantação gerenciada do EMQX (EMQX Serverless), que exige conexões cifradas e autenticadas, com credenciais distintas para o servidor de retransmissão e para o dispositivo. O servidor de retransmissão conecta-se ao broker por MQTT sobre WebSocket com TLS (porta 8084), única porta de saída para MQTT permitida pela rede da máquina virtual, enquanto o dispositivo utiliza MQTT sobre TLS (porta 8883).
+
+\subsubsection{Validação e resultados parciais}
+\label{subsec:validacao}
+
+Os testes automatizados do servidor de retransmissão -- sete testes unitários e um teste de integração com broker real -- são executados com sucesso. A validação ponta a ponta, por sua vez, foi conduzida em 20 de novembro de 2026 com o firmware real executado em um ESP32 simulado no Wokwi, conectado a um broker MQTT, ao servidor de retransmissão e, alternativamente, ao simulador de cena \texttt{scene-sim} ou à cena publicada e acessada pelo cliente web do Decentraland. Posteriormente, o sistema foi testado com o braço físico. A Tabela \ref{tab:validacao} sintetiza os resultados obtidos.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \caption{Resultados da validação da prova de conceito. Fonte: Autor, 2026.}
+    \begin{tabular}{| p{6.4cm} | p{7cm} |}
+        \hline
+        \textbf{Verificação} & \textbf{Resultado} \\ \hline
+        Compilação do firmware para ESP8266 e ESP32 & Bem-sucedida (29,6~KB de RAM no ESP8266; 994~KB de \textit{flash} no ESP32) \\ \hline
+        Inicialização, conexão Wi-Fi e conexão MQTT no simulador & Bem-sucedidas \\ \hline
+        Comando remoto (virtual $\rightarrow$ físico) & Comando \texttt{[45, 120, 60]}, garra 10\textdegree: confirmado pelo servidor; servomotores simulados percorreram trajetória suave a partir de 90\textdegree, acompanhada pela telemetria \\ \hline
+        Controle local (físico $\rightarrow$ virtual) & Quatro acionamentos da tecla Q levaram a base de 90\textdegree{} a 110\textdegree; cada passo chegou à cena como telemetria \\ \hline
+        Status do dispositivo & Queda de conexão refletida como \texttt{offline} (via \textit{last will}), seguida de \texttt{online} após a reconexão automática \\ \hline
+        Comando pela rota HTTP pública & Comando \texttt{[30, 60, 150]}, garra 20\textdegree: confirmado; pose atingida pelo braço simulado em aproximadamente 6~s \\ \hline
+        Painel da cena publicada no cliente web & Cada acionamento chegou ao firmware e o braço virtual acompanhou a telemetria \\ \hline
+        WebSocket pela rota pública & Malsucedido, em razão do proxy da universidade (Subseção \ref{subsec:dificuldades}) \\ \hline
+        Servidor de retransmissão em contêiner, atrás da rota do nginx & Contêiner saudável; rotas respondendo pelo endereço público \\ \hline
+        Braço físico (NodeMCU e servomotores SG90) & Funcionamento confirmado com o hardware real \\ \hline
+    \end{tabular}
+    \label{tab:validacao}
+\end{table}
+
+Esses resultados demonstram, do ponto de vista funcional, o fechamento do ciclo de sincronização bidirecional entre um dispositivo executando o firmware real e o gêmeo digital publicado no Decentraland. O tempo de aproximadamente 6~s observado no comando pela rota pública não deve ser interpretado como latência do sistema: o simulador executa o firmware em velocidade inferior à real quando há Wi-Fi simulado (cerca de oito vezes mais lento nos testes), e o deslocamento de 60\textdegree{} requerido pelo cotovelo demandaria, no hardware real, cerca de 0,6~s à velocidade máxima de 100\textdegree/s configurada no firmware.
+
+Medições formais de latência ainda não foram realizadas. Uma estimativa a partir dos parâmetros do sistema permite, no entanto, delimitar a contribuição dos atrasos introduzidos pelo próprio projeto: no fluxo físico $\rightarrow$ virtual, a limitação da taxa de telemetria acrescenta até 100~ms e a consulta periódica da cena, até 200~ms, aos quais se somam os tempos de trânsito na rede até o broker e a suavização visual da cena; no fluxo virtual $\rightarrow$ físico, ao tempo de trânsito do comando soma-se o tempo de deslocamento dos servomotores, limitado a 100\textdegree/s -- de modo que um deslocamento completo de 180\textdegree{} exige ao menos 1,8~s. A quantificação experimental desses atrasos sob condições realistas constitui etapa seguinte do trabalho, coerente com a abordagem quantitativa prevista na Subseção \ref{test}.
+
+Os testes com o braço físico (Figura \ref{fig:robot1}), com o firmware executado na NodeMCU acionando os quatro servomotores SG90, confirmaram o funcionamento da solução com o hardware real, corroborando os resultados obtidos em simulação. Permanece pendente a calibração dos ângulos entre os servomotores e o modelo tridimensional.
+
+\subsubsection{Principais dificuldades e decisões de projeto}
+\label{subsec:dificuldades}
+
+O desenvolvimento da prova de conceito revelou um conjunto de dificuldades técnicas cujo enfrentamento orientou as principais decisões de projeto. Relatam-se, a seguir, as mais relevantes.
+
+\paragraph{Heterogeneidade de protocolos entre dispositivo e cena.} O microcontrolador possui recursos de memória e processamento escassos, para os quais o MQTT é particularmente adequado, oferecendo, além disso, mensagens retidas e \textit{last will}, mecanismos diretamente aproveitados para a sincronização de estado e o monitoramento de disponibilidade. As cenas do Decentraland, por outro lado, só podem estabelecer conexões WebSocket ou realizar requisições HTTP. Uma versão inicial do firmware chegou a comunicar-se diretamente por WebSocket, contrariando a estratégia definida. A decisão consolidada foi isolar essa heterogeneidade no servidor de retransmissão, que traduz entre os dois mundos e concentra a validação dos comandos, em consonância com a arquitetura em camadas apontada pela literatura (Subseção \ref{subsec:referencial}).
+
+\paragraph{Pinagem herdada de outra plataforma.} A versão inicial do firmware utilizava os GPIOs 13, 14, 26 e 27, herdados de um exemplo para o ESP32. Os GPIOs 26 e 27 não existem no ESP8266, de modo que o cotovelo e a garra jamais se moveriam. A pinagem foi redefinida (Tabela \ref{tab:pinos}), considerando ainda as restrições dos pinos de \textit{strapping} e do GPIO 16.
+
+\paragraph{Movimento não temporizado.} Na versão inicial do firmware, a atualização dos servomotores ocorria a cada iteração do laço principal -- milhares de vezes por segundo --, de modo que os servomotores saltavam praticamente de imediato para o alvo e a telemetria inundava o canal de comunicação com ângulos fracionários (por exemplo, \texttt{91.99999}). A correção consistiu na temporização explícita do movimento, na limitação da taxa de telemetria e no arredondamento dos ângulos publicados (Subseção \ref{subsec:firmware}).
+
+\paragraph{Simulação do dispositivo.} Para que o desenvolvimento não dependesse da disponibilidade do hardware, recorreu-se ao simulador Wokwi, que, no entanto, não suporta o ESP8266. O firmware foi então tornado portável para o ESP32, com as diferenças entre as plataformas isoladas por compilação condicional. Além disso, por executar a simulação em servidores remotos, o Wokwi não alcança a rede local do desenvolvedor, o que exigiu o uso de um broker público com prefixo de tópicos aleatório -- aceitável por trafegarem apenas ângulos fictícios. Observou-se, ainda, que a simulação com Wi-Fi executa cerca de oito vezes mais lentamente que o tempo real, o que ocasionalmente faz o intervalo de \textit{keepalive} do MQTT, contado em tempo simulado, exceder o limite do broker, contado em tempo real, provocando desconexões seguidas de reconexão automática; e que o plano gratuito do simulador encerra cada sessão após cinco minutos. Esses efeitos são próprios da simulação e não ocorrem no hardware real.
+
+\paragraph{Restrições da rede institucional.} A rede da máquina virtual que hospeda o servidor bloqueia as portas de saída usuais do MQTT (1883 e 8883), bem como WebSocket sem cifragem, permitindo apenas a porta 8084 com TLS. Por essa razão, adotou-se um broker gerenciado acessível por MQTT sobre WebSocket com TLS nessa porta. A exigência de TLS estendeu-se ao firmware, o que trouxe duas consequências: a necessidade de sincronizar o relógio do microcontrolador por NTP antes de validar o certificado do broker; e o bloqueio do laço principal durante o estabelecimento da conexão. Constatou-se que os tempos limite padrão das bibliotecas do ESP8266 -- 15~s para cada etapa de resolução de nomes, conexão TCP e \textit{handshake} TLS, além de 15~s para a confirmação da conexão MQTT -- poderiam congelar o braço por cerca de um minuto em caso de falha de rede. Esses tempos foram reduzidos para 5~s, e o intervalo entre tentativas de reconexão passou a ser contado a partir do término, e não do início, de cada tentativa, evitando que tentativas sucessivamente lentas monopolizassem o laço principal.
+
+\paragraph{Proxy da universidade e WebSocket.} A máquina virtual encontra-se atrás de um proxy TLS administrado pela universidade, que repassa a negociação de \textit{upgrade} para WebSocket apenas às rotas previamente conhecidas -- como as do próprio Catalyst --, mas não à rota do servidor de retransmissão. Testes de negociação confirmaram que a conexão WebSocket é estabelecida com sucesso tanto diretamente no servidor de retransmissão quanto por meio do nginx, falhando apenas quando atravessa o proxy. Requisições HTTP convencionais, por sua vez, atravessam-no normalmente. Foram avaliadas quatro alternativas: (i) a liberação do \textit{upgrade} na rota do servidor de retransmissão, solução ideal, porém dependente da equipe que administra o proxy; (ii) um túnel da Cloudflare, inviabilizado pelo bloqueio de sua porta de saída no \textit{firewall}; (iii) túneis de terceiros, viáveis, porém dependentes de serviço externo e sujeitos à alteração do endereço a cada execução; e (iv) a comunicação direta da cena com o broker, descartada por contornar a validação de comandos do servidor e por limitações do ambiente de execução das cenas. Adotou-se, por fim, a consulta periódica por HTTP, ao custo de até 200~ms adicionais de atraso -- valor da mesma ordem de grandeza do intervalo mínimo de 100~ms entre telemetrias do firmware --, mantendo-se o modo WebSocket disponível para quando a restrição for removida.
+
+\paragraph{Restrições da plataforma de metaverso.} Conforme descrito na Subseção \ref{subsec:cena}, a impossibilidade de transformar subpartes de um modelo glTF, o limite de triângulos por parcela e a diferença de orientação entre os sistemas de coordenadas exigiram o desenvolvimento de uma etapa específica de preparação do modelo tridimensional, bem como a reconstrução explícita da cadeia cinemática na cena.
+
+\paragraph{Interação entre comandos sucessivos.} O teste ponta a ponta com a cena publicada revelou um defeito de interação: como cada comando partia da última telemetria, o acionamento de uma junta durante o movimento de outra enviava, para esta, sua posição intermediária, interrompendo o movimento em curso. A correção consistiu em fazer os comandos partirem do último alvo enviado durante um intervalo após cada comando (Subseção \ref{subsec:cena}).
+
+\subsubsection{Limitações e pendências}
+\label{subsec:pendencias}
+
+No estágio atual, identificam-se as seguintes limitações e pendências da prova de conceito:
+
+\begin{itemize}
+    \item \textbf{Sincronização em malha aberta}: na ausência de sensores de posição, o gêmeo reflete o estado comandado, e não o estado medido, do braço (Subseção \ref{subsec:camada_fisica});
+    \item \textbf{Controle de acesso}: sem o \textit{token} configurado, qualquer pessoa que conheça o endereço do servidor pode movimentar o braço; mesmo com ele, o \textit{token} permanece legível no código da cena publicada. Um mecanismo de controle de acesso adequado deve ser definido antes da operação com o braço físico em ambiente aberto;
+    \item \textbf{Calibração}: a correspondência entre os ângulos dos servomotores e os ângulos do modelo tridimensional ainda utiliza parâmetros provisórios;
+    \item \textbf{Medições de desempenho}: a mensuração experimental de latência, com o braço físico e sob condições realistas de uso, ainda está por ser realizada;
+    \item \textbf{Persistência}: o estado é mantido apenas em memória no servidor de retransmissão, que, após reiniciado, depende da mensagem retida no broker para recuperá-lo.
+\end{itemize}
 
 \subsection{Da revisão de literatura}
 \label{res:revisao}
@@ -251,9 +596,9 @@ Este trabalho de Iniciação Científica partiu do problema de compartilhamento 
  
 Para embasar essa proposta, realizou-se um levantamento bibliográfico sistemático (Seção \ref{levantamento}) sobre metaverso educacional, gêmeos digitais e laboratórios virtuais/remotos, cujos resultados (Subseção \ref{res:revisao}) confirmam que a integração entre ambientes imersivos e gêmeos digitais sincronizados por IoT tende a favorecer o engajamento, a motivação e, em menor grau, a aprendizagem de curto prazo dos estudantes, ao mesmo tempo em que revelam uma lacuna relevante: a escassez de implementações educacionais que integrem, em um único ambiente avaliado empiricamente, sincronização bidirecional de gêmeos digitais, comunicação via IoT e interfaces imersivas de metaverso.
  
-Como prova de conceito para validar, em escala reduzida e controlada, a viabilidade técnica da arquitetura proposta, desenvolveu-se um gêmeo digital com sincronização bidirecional de um pequeno braço robótico controlado por um microcontrolador ESP8266 (Subseção \ref{res:poc}). Os resultados obtidos demonstram que é tecnicamente viável sincronizar, em tempo quase real, o estado de um equipamento físico com sua representação no Decentraland. Esse resultado corrobora, em escala reduzida, exatamente o tipo de arquitetura ciberfísica em camadas -- sensoriamento, comunicação, computação de borda e interface imersiva -- apontada pela literatura como estratégia dominante de implementação de gêmeos digitais (Subseção \ref{res:revisao}), ao mesmo tempo em que contribui para preencher a lacuna de implementações educacionais avaliadas nesse formato integrado.
+Como prova de conceito para validar, em escala reduzida e controlada, a viabilidade técnica da arquitetura proposta, desenvolveu-se um gêmeo digital com sincronização bidirecional de um pequeno braço robótico controlado por um microcontrolador ESP8266 (Subseção \ref{res:poc}). A solução articula o dispositivo físico, um broker MQTT, um servidor de retransmissão desenvolvido em Go e uma cena publicada em um servidor Catalyst do próprio projeto, tendo exigido a superação de restrições do microcontrolador, da rede institucional e da própria plataforma de metaverso (Subseção \ref{subsec:dificuldades}). Os resultados parciais, obtidos em validação ponta a ponta com o firmware executado em um microcontrolador simulado e confirmados em testes com o braço físico, demonstram que é tecnicamente viável sincronizar, em tempo quase real, o estado de um equipamento físico com sua representação no Decentraland. Esse resultado corrobora, em escala reduzida, exatamente o tipo de arquitetura ciberfísica em camadas -- sensoriamento, comunicação, computação de borda e interface imersiva -- apontada pela literatura como estratégia dominante de implementação de gêmeos digitais (Subseção \ref{res:revisao}), ao mesmo tempo em que contribui para preencher a lacuna de implementações educacionais avaliadas nesse formato integrado.
  
-É importante reconhecer, contudo, as limitações do presente estágio do trabalho. A prova de conceito restringiu-se a um único equipamento de pequena escala, executado em infraestrutura local, sem avaliação formal do impacto pedagógico da solução junto a estudantes. Como trabalhos futuros, sugere-se: (i) a expansão da prova de conceito para o ambiente completo do LDS, contemplando múltiplos equipamentos e cenários de uso concorrente; (ii) a condução de estudos de avaliação pedagógica que comparem, de forma controlada, o uso do gêmeo digital do LDS em metaverso com o uso convencional presencial do laboratório, conforme sugerido pela lacuna identificada na revisão de literatura; (iii) a mensuração formal de métricas de desempenho de rede sob condições realistas de uso simultâneo por múltiplas turmas; e (iv) a investigação de mecanismos de interoperabilidade entre plataformas de metaverso, de modo a viabilizar o uso inter-campi da infraestrutura, conforme originalmente motivado na Seção \ref{intro}. Por fim, este trabalho reforça e dá continuidade ao projeto UnBland e à agenda de pesquisa mais ampla sobre metaverso educacional conduzida na UnB, contribuindo com uma prova de conceito replicável de sincronização bidirecional entre ambientes físicos e virtuais.
+É importante reconhecer, contudo, as limitações do presente estágio do trabalho. A prova de conceito restringiu-se a um único equipamento de pequena escala, sincronizado em malha aberta, sem medições formais de latência e sem avaliação formal do impacto pedagógico da solução junto a estudantes; restam, ainda, a calibração do modelo tridimensional e a definição de um mecanismo adequado de controle de acesso (Subseção \ref{subsec:pendencias}). Como trabalhos futuros, sugere-se: (i) a expansão da prova de conceito para o ambiente completo do LDS, contemplando múltiplos equipamentos e cenários de uso concorrente; (ii) a condução de estudos de avaliação pedagógica que comparem, de forma controlada, o uso do gêmeo digital do LDS em metaverso com o uso convencional presencial do laboratório, conforme sugerido pela lacuna identificada na revisão de literatura; (iii) a mensuração formal de métricas de desempenho de rede sob condições realistas de uso simultâneo por múltiplas turmas; e (iv) a investigação de mecanismos de interoperabilidade entre plataformas de metaverso, de modo a viabilizar o uso inter-campi da infraestrutura, conforme originalmente motivado na Seção \ref{intro}. Por fim, este trabalho reforça e dá continuidade ao projeto UnBland e à agenda de pesquisa mais ampla sobre metaverso educacional conduzida na UnB, contribuindo com uma prova de conceito replicável de sincronização bidirecional entre ambientes físicos e virtuais.
 
 % ---------- REFERÊNCIAS ----------
 \newpage
