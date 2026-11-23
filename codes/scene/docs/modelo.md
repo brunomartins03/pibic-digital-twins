@@ -39,7 +39,7 @@ Foram avaliados dois modelos:
 
 | Modelo | Situação |
 |--------|----------|
-| `Robotik_arm.glb` (exportado do Blender; hoje usado na `campusFGA`) | Primeiro candidato; as juntas foram identificadas, mas ele foi substituído |
+| `Robotik_arm.glb` (exportado do Blender; era o braço estático da `campusFGA`) | Primeiro candidato; as juntas foram identificadas, mas ele foi substituído |
 | `model2.glb` — "4-Axis Arm Assembly", de samoubala ([Sketchfab](https://sketchfab.com/3d-models/4-axis-arm-assembly-c0a748faf37644288c1271e9a6f51057), [CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/)) | Escolhido: cada peça é uma malha separada (`Object_N`), o que permite agrupá-las por junta. Exige redução de triângulos (20.374 > 10.000) e atribuição do autor |
 
 O `model2.glb` original fica em `scene/model2.glb`. A atribuição aparece na
@@ -131,7 +131,7 @@ idêntica da saída do script). A cena importa o `manifest.json` e cria uma
 entidade por parte:
 
 ```
-raiz (ARM_POSITION = centro da parcela, ARM_SCALE = 8 → ~1,4 m)
+raiz (ARM_POSITION e ARM_ROTATION_Y_DEG no campus, ARM_SCALE = 5,4 → 0,94 m)
 └── base
     └── turntable      joints[0]
         └── upper_arm  joints[1]
@@ -143,6 +143,9 @@ raiz (ARM_POSITION = centro da parcela, ARM_SCALE = 8 → ~1,4 m)
 Cada entidade recebe `parent`, `position = offsetFromParent` e o
 `GltfContainer` do arquivo da parte. Como a origem de cada arquivo está no
 pivô, girar a entidade em torno de `axis` move a junta corretamente.
+
+A raiz fica dentro do campus FGA, no lugar do antigo modelo estático
+`Robotik_arm.glb` ([campus FGA](cena.md#campus-fga)).
 
 **Conversão de sistema de coordenadas.** O glTF é destro e o Decentraland é
 canhoto: os modelos importados são espelhados em `x`. Para que o manifesto

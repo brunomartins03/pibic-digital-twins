@@ -50,4 +50,4 @@ ponta com o braço simulado no Wokwi e uma cena do Decentraland simulada.
 | Firmware do braço         | Compila para ESP8266 e ESP32; validado em simulação (Wokwi) |
 | Relay server              | Testes unitários e de integração com MQTT passando           |
 | Integração ponta a ponta  | Validada: Wokwi ⇄ broker MQTT ⇄ relay ⇄ cena publicada no Catalyst do projeto |
-| Cena do Decentraland      | Publicada na parcela 30,30 do realm `test`; calibração dos servos pendente |
+| Cena do Decentraland      | Braço dentro da cena `campusFGA` (parcela 12,13) do realm `test`; posição final e calibração dos servos pendentes |

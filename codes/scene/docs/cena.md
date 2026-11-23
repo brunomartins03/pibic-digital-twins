@@ -8,7 +8,7 @@ O Decentraland só transforma um `.glb` como um bloco único, por isso o braço
 parte em que está montada:
 
 ```
-raiz (ARM_POSITION, escala ARM_SCALE)
+raiz (ARM_POSITION, giro ARM_ROTATION_Y_DEG, escala ARM_SCALE)
 └── base
     └── turntable      joints[0]  base
         └── upper_arm  joints[1]  ombro
@@ -66,8 +66,9 @@ junta não interrompe o movimento ainda em curso.
 | `RELAY_TRANSPORT`     | `http`                         | `http` (consulta periódica) ou `websocket`      |
 | `POLL_INTERVAL_S`     | `0.2`                          | Intervalo de consulta no modo `http`            |
 | `SCENE_TOKEN`         | *(vazio)*                      | Igual ao `SCENE_TOKEN` do relay                 |
-| `ARM_POSITION`        | `(8, 0, 8)`                    | Centro da parcela                               |
-| `ARM_SCALE`           | `8`                            | O modelo tem 17 cm; escalado fica com ~1,4 m    |
+| `ARM_POSITION`        | `(205.12, 2.29, 208.82)`       | Posição na cena (m), na parcela 12,13; provisória |
+| `ARM_ROTATION_Y_DEG`  | `-120`                         | Giro em torno do eixo vertical; em 0 o braço aponta para o norte (`+z`) |
+| `ARM_SCALE`           | `5.4`                          | O modelo tem 17,2 cm; escalado fica com 0,94 m  |
 | `COMMAND_STEP_DEG`    | `10`                           | Graus por clique                                |
 | `TARGET_HOLD_S`       | `10`                           | Tempo em que os comandos partem do último alvo  |
 | `FOLLOW_SPEED_DEG_S`  | `180`                          | Velocidade de acompanhamento da telemetria      |
@@ -89,3 +90,38 @@ com o braço físico:
    do servo: esse é o `rest`.
 2. Aumente o ângulo do servo; se o braço virtual girar no sentido contrário
    ao físico, use `sign: -1`.
+
+## Campus FGA
+
+A cena do braço foi unida à `campusFGA`: as duas não podem dividir parcelas,
+e o braço precisava ficar dentro do campus. O conteúdo do campus veio da cópia
+da entidade publicada ([`deploy/scenes/campusFGA`](../../deploy/README.md#cópia-da-campusfga)),
+feita no Creator Hub:
+
+| Arquivo | Origem |
+|---------|--------|
+| `assets/scene/main.composite` | Cópia da entidade, sem o modelo estático `Robotik_arm.glb` (entidade 684), substituído pelo gêmeo |
+| `assets/Models/`, `assets/asset-packs/`, `assets/images/` | Cópia da entidade (sem `Models/Robotik_arm/`) |
+| `scene.json` | O da `campusFGA` (parcelas, ponto de chegada, permissões, céu), com a descrição e a atribuição do braço |
+| `assets/asset-packs/{classic_bench,high_stool}/Seat.ts` | `Thiago/CenasProntas/campusFGA` em `pspd-unb/metaverso-decentraland` (commit `6ae5f892`) |
+| `assets/asset-packs/{green_button,blue_button}/Button.ts` | Reconstruído a partir do `bin/index.js` publicado |
+
+A entidade publicada não inclui os arquivos `.ts` dos itens com script
+(28 bancos, bancos altos e botões), e o SDK precisa deles para compilar. O
+`Seat.ts` existe no repositório de origem; o `Button.ts` nunca foi versionado e
+foi reescrito a partir do código compilado.
+
+Verificações, em 23/11/2026:
+
+- compilar o `main.composite` original reproduz, byte a byte, o `main.crdt`
+  publicado, então a única mudança no conteúdo do campus é a remoção do
+  modelo estático;
+- os scripts compilados são idênticos aos do `bin/index.js` publicado, a menos
+  dos nomes de variáveis gerados pelo compilador;
+- a função `main()` da cena original era vazia: toda a lógica vinha do
+  composite e dos scripts, então nada se perdeu na recompilação.
+
+O `ARM_POSITION` atual é o lugar do modelo estático removido, sobre a parcela
+12,13; o giro de −120° é o dele, mas a frente dos dois modelos pode não
+coincidir. Para encontrar outro lugar, abra a cena no Creator Hub e leia a
+posição de um objeto próximo, ou use o painel de depuração do preview.

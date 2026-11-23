@@ -29,7 +29,7 @@ nginx do Catalyst (contêiner "nginx", porta 80 da VM 192.168.122.84)
 |------------------------|--------------------------------------------------------------|
 | Catalyst               | `/opt/catalyst/catalyst-owner`, realm `test`                 |
 | URL pública            | <https://kiriland.unb.br>                     |
-| Cena                   | parcela 30,30 — <https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland.unb.br&position=30%2C30> |
+| Cena                   | `campusFGA` com o braço (parcelas 0,0–15,16; braço na 12,13) — <https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland.unb.br&position=12%2C13> |
 | Relay                  | `https://kiriland.unb.br/robotarm/`           |
 | Rede Docker do Catalyst | `catalyst-owner_default`, gateway `172.20.0.1`               |
 
@@ -151,13 +151,15 @@ O modo WebSocket continua disponível (`RELAY_TRANSPORT = 'websocket'` em
 ## 4. Publicação da cena
 
 O Catalyst está configurado com `IGNORE_BLOCKCHAIN_ACCESS_CHECKS=true`, então
-qualquer carteira publica em qualquer parcela. A cena fica em 30,30, fora da
-cena `campusFGA` (x 0–15, y 0–16). Antes de publicar em outra parcela,
-verifique se ela está livre, pois a publicação substitui a cena existente:
+qualquer carteira publica em qualquer parcela. A cena do braço faz parte da
+`campusFGA` e ocupa as parcelas dela (0,0–15,16); publicá-la substitui a
+versão ativa do campus. Até 23/11/2026, o braço era uma cena separada na
+parcela 30,30. Antes de publicar em outras parcelas, verifique se estão
+livres, pois a publicação substitui a cena existente:
 
 ```bash
 curl -s https://kiriland.unb.br/content/entities/active \
-  -H 'content-type: application/json' -d '{"pointers":["30,30"]}'
+  -H 'content-type: application/json' -d '{"pointers":["0,0"]}'
 ```
 
 A publicação foi assinada com chaves descartáveis, nunca gravadas no

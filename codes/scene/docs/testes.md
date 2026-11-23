@@ -35,7 +35,7 @@ mesma máquina que o cliente do Decentraland.
 
 Se o preview e o relay estiverem em um servidor remoto, encaminhe as duas
 portas e abra o Explorer, ou o cliente web
-(`https://decentraland.org/bevy-web/?preview=true&realm=http://127.0.0.1:8000&position=30,30`),
+(`https://decentraland.org/bevy-web/?preview=true&realm=http://127.0.0.1:8000&position=12,13`),
 na sua máquina:
 
 ```bash
@@ -55,9 +55,8 @@ Verificações esperadas:
 
 O Catalyst local (realm `test`, <https://kiriland.unb.br>) está
 configurado com `IGNORE_BLOCKCHAIN_ACCESS_CHECKS=true`: qualquer carteira
-pode publicar em qualquer parcela. A parcela 30,30 fica fora da cena
-`campusFGA` (x 0–15, y 0–16); verifique antes de publicar em outra parcela,
-pois a publicação substitui a cena existente.
+pode publicar em qualquer parcela. A cena ocupa as parcelas da `campusFGA`
+(0,0–15,16) e a publicação substitui a versão ativa do campus.
 
 A assinatura pode ser feita com uma chave descartável, guardada fora do
 repositório:
@@ -71,17 +70,19 @@ Verificação:
 
 ```bash
 curl -s https://kiriland.unb.br/content/entities/active \
-  -H 'content-type: application/json' -d '{"pointers":["30,30"]}'
+  -H 'content-type: application/json' -d '{"pointers":["0,0"]}'
 ```
 
-Para visitar, abra
-<https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland.unb.br&position=30%2C30>.
+Para visitar o braço, abra
+<https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland.unb.br&position=12%2C13>.
 A cena publicada usa o relay em `https://kiriland.unb.br/robotarm`,
 publicado pelo nginx do Catalyst; a configuração e o problema do proxy da
 universidade com WebSocket estão em
 [implantação](../../relay-server/docs/implantacao.md).
 
 ### Teste ponta a ponta com o Wokwi
+
+Feito com a cena ainda separada, na parcela 30,30.
 
 Validado em 20/11/2026, com o relay em `RELAY_ADDR=172.20.0.1:8080` e o
 broker e o prefixo do Wokwi

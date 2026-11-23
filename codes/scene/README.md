@@ -1,9 +1,11 @@
 # Cena do Decentraland
 
-Cena SDK7 do gêmeo digital: monta o braço robótico a partir das partes
-móveis extraídas do modelo 3D ([processo](docs/modelo.md)), segue a
-telemetria do [relay](../relay-server/README.md) e envia comandos pelo painel
-da interface.
+Cena SDK7 do campus FGA (`campusFGA`, parcelas 0,0–15,16) com o gêmeo
+digital do braço robótico. O campus vem da cena feita no Creator Hub
+([origem e mudanças](docs/cena.md#campus-fga)); o braço é montado a partir
+das partes móveis extraídas do modelo 3D ([processo](docs/modelo.md)), segue
+a telemetria do [relay](../relay-server/README.md) e recebe comandos pelo
+painel da interface.
 
 ```bash
 npm install
@@ -23,6 +25,9 @@ npm start          # preview local em http://localhost:8000
 
 ```
 scene/
+├── assets/scene/        # main.composite: o campus montado no Creator Hub
+├── assets/Models/       # modelos do campus (prédio da FGA, símbolo e texto da UnB)
+├── assets/asset-packs/  # itens do Creator Hub (bancos, botões...) e seus scripts
 ├── assets/models/arm/   # partes do braço (.glb) e manifest.json usados pela cena
 ├── model2.glb           # modelo original ("4-Axis Arm Assembly")
 ├── parts/               # saída do script de divisão (cópia de assets/models/arm/)
@@ -33,7 +38,7 @@ scene/
 │   ├── arm.ts           # cadeia cinemática e animação das juntas
 │   ├── relay.ts         # cliente HTTP/WebSocket do relay
 │   └── ui.tsx           # painel de status e comandos
-├── scene.json           # parcela 30,30
+├── scene.json           # parcelas 0,0–15,16 (272), ponto de chegada e permissões
 └── docs/
 ```
 

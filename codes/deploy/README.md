@@ -2,8 +2,9 @@
 
 Sobe, em qualquer máquina com Docker, o mesmo ambiente do servidor do
 laboratório: um Catalyst do Decentraland (realm `test`) com a cena
-`campusFGA` (parcelas 0,0–15,16) e a cena do gêmeo digital na parcela 30,30,
-o relay do braço e, opcionalmente, os serviços de comunicação entre avatares.
+`campusFGA` (parcelas 0,0–15,16) e, dentro dela, o gêmeo digital do braço
+(parcela 12,13), o relay do braço e, opcionalmente, os serviços de comunicação
+entre avatares.
 
 Reconstruído em 23/11/2026 a partir dos contêineres em execução no servidor
 (`/opt/catalyst/catalyst-owner`, `/opt/decentraland-comms` e
@@ -17,14 +18,14 @@ navegador ──HTTP(S)──▶ nginx :80
                         ├── /archipelago/ws            ─▶ ws-connector ─┐
                         └── /rtc                       ─▶ livekit       │ NATS ◀─ pulse
                                                          gatekeeper ◀──┘ (perfil "comms")
-deployer (executa uma vez): compila codes/scene e publica as duas cenas
+deployer (executa uma vez): compila codes/scene (campus + braço) e a publica
 ```
 
 | Serviço | Origem | Papel |
 |---|---|---|
 | `postgres`, `content-server`, `lamb2`, `nginx` | imagens do `catalyst-owner` | Catalyst: conteúdo, *lambdas* e `/about` do realm |
 | `relay` | `../relay-server` | Ponte HTTP/WebSocket ⇄ MQTT do braço |
-| `deployer` | `deployer/` | Compila a cena do braço e publica as cenas; termina em seguida |
+| `deployer` | `deployer/` | Compila `codes/scene` (campus com o braço) e a publica; termina em seguida |
 | `nats`, `ws-connector`, `pulse`, `gatekeeper`, `postgres-gatekeeper`, `livekit` | GitHub `decentraland/*` | Comunicação entre avatares (perfil `comms`) |
 
 ## Requisitos
@@ -45,12 +46,11 @@ docker compose logs -f deployer
 ```
 
 Na primeira inicialização o Catalyst passa cerca de 6 minutos em
-`Bootstrapping`; o `deployer` espera até o estado `Syncing` e então publica as
-cenas:
+`Bootstrapping`; o `deployer` espera até o estado `Syncing` e então publica a
+cena:
 
 ```
 waiting for the Catalyst (Bootstrapping)
-Robotic arm digital twin: deployed bafkrei… to 1 parcel(s) from 30,30
 campusFGA: deployed bafkrei… to 272 parcel(s) from 0,0
 ```
 
@@ -59,14 +59,14 @@ Verificação:
 ```bash
 curl -s localhost/about | grep -o '"healthy":[a-z]*' | head -1   # "healthy":true
 curl -s localhost/content/entities/active -H 'content-type: application/json' \
-  -d '{"pointers":["30,30"]}' | grep -o '"title":"[^"]*"'         # Robotic arm digital twin
+  -d '{"pointers":["12,13"]}' | grep -o '"title":"[^"]*"'         # campusFGA
 curl -s localhost/robotarm/healthz                                # {"deviceOnline":…,"ok":true}
 ```
 
 Cliente web, com `<PUBLIC_URL>` codificado na URL:
-`https://decentraland.zone/play/?realm=<PUBLIC_URL>&position=30%2C30`.
+`https://decentraland.zone/play/?realm=<PUBLIC_URL>&position=12%2C13`.
 
-A cena do braço recebe na compilação a URL do relay (`${PUBLIC_URL}/robotarm`)
+A cena recebe na compilação a URL do relay (`${PUBLIC_URL}/robotarm`)
 e o `SCENE_TOKEN`, que substituem os valores de `scene/src/config.ts`. Uma
 cena publicada só abre URLs `https://` e `wss://`; por isso, com
 `PUBLIC_URL=http://localhost`, o braço pode não receber telemetria no cliente.
@@ -98,7 +98,7 @@ ativo, o `/about` anuncia
 Sem o perfil, deixe `ARCHIPELAGO_URL` vazio: definido e sem `ws-connector`, o
 `/about` responde 503 e o cliente recusa o realm.
 
-## Atualizar as cenas
+## Atualizar a cena
 
 Depois de alterar `codes/scene`:
 
@@ -113,7 +113,11 @@ gerada a cada execução: o Catalyst roda com
 
 ## Cópia da campusFGA
 
-`scenes/campusFGA/` é uma cópia exata da entidade publicada no servidor em
+`scenes/campusFGA/` guarda a versão original do campus, sem o gêmeo: o
+`deployer` não a publica mais. A cena publicada é `codes/scene`, montada a
+partir desta cópia ([campus FGA](../scene/docs/cena.md#campus-fga)).
+
+Ela é uma cópia exata da entidade publicada no servidor em
 21/11/2026 (`bafkreih4lznwhjnoksytqdsmmde4hob6b42rjtrisifpo6bx7f4zyupsti`).
 Nenhuma cópia do código-fonte corresponde a ela: o `main.crdt` publicado
 difere de todas as versões de `Thiago/CenasProntas/campusFGA` em
@@ -140,4 +144,4 @@ python3 scripts/export-scene.py https://kiriland.unb.br/content 0,0 \
 | Postgres ajustado para o servidor (`shared_buffers` 2,5 GB) | Configuração padrão |
 | Logs em `syslog` | Logs do Docker (`json-file`, 10 MB × 3) |
 | Portas do Pulse, ws-connector, NATS e *gatekeeper* em `127.0.0.1` | Sem portas no host (só pelo nginx) |
-| Cena do braço ausente em 30,30 desde a republicação da campusFGA | Publicada pelo `deployer` |
+| `campusFGA` com o braço estático e o gêmeo numa cena separada, em 30,30 (até a republicação de `codes/scene`) | `campusFGA` com o gêmeo no lugar do braço estático, publicada pelo `deployer` |

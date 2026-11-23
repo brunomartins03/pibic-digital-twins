@@ -77,7 +77,7 @@ telemetria do relay. O processo está em
 
 ### Implantação
 
-No servidor do projeto, a cena está publicada no Catalyst (parcela 30,30) e o
+No servidor do projeto, o braço faz parte da cena `campusFGA` (parcela 12,13) e o
 relay roda em Docker atrás do nginx do Catalyst, em
 `https://kiriland.unb.br/robotarm/`. Como o proxy TLS da
 universidade não repassa WebSocket, a cena publicada usa o modo HTTP. Detalhes
