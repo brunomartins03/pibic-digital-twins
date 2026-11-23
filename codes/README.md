@@ -79,7 +79,7 @@ telemetria do relay. O processo está em
 
 No servidor do projeto, a cena está publicada no Catalyst (parcela 30,30) e o
 relay roda em Docker atrás do nginx do Catalyst, em
-`https://kiriland-metaverso.duckdns.org/robotarm/`. Como o proxy TLS da
+`https://kiriland.unb.br/robotarm/`. Como o proxy TLS da
 universidade não repassa WebSocket, a cena publicada usa o modo HTTP. Detalhes
 em [`relay-server/docs/implantacao.md`](relay-server/docs/implantacao.md).
 

@@ -112,6 +112,6 @@ Cenas publicadas fora do modo de pré-visualização exigem `https://`/`wss://`:
 exponha o relay por trás de um proxy reverso com TLS.
 
 No servidor do projeto, o relay é publicado em
-`https://kiriland-metaverso.duckdns.org/robotarm/` pelo nginx do Catalyst; a
+`https://kiriland.unb.br/robotarm/` pelo nginx do Catalyst; a
 configuração, o problema do proxy da universidade com WebSocket e o teste
 ponta a ponta estão em [implantação](implantacao.md).

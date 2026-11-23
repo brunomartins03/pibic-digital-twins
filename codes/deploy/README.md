@@ -125,7 +125,7 @@ publicado por engano junto com a cena.
 Para refazer a cópia a partir de um Catalyst:
 
 ```bash
-python3 scripts/export-scene.py https://kiriland-metaverso.duckdns.org/content 0,0 \
+python3 scripts/export-scene.py https://kiriland.unb.br/content 0,0 \
   scenes/campusFGA --exclude 'Claude outputs/'
 ```
 

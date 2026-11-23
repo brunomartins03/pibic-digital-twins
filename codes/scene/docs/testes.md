@@ -53,7 +53,7 @@ Verificações esperadas:
 
 ## Publicação no Catalyst do projeto
 
-O Catalyst local (realm `test`, <https://kiriland-metaverso.duckdns.org>) está
+O Catalyst local (realm `test`, <https://kiriland.unb.br>) está
 configurado com `IGNORE_BLOCKCHAIN_ACCESS_CHECKS=true`: qualquer carteira
 pode publicar em qualquer parcela. A parcela 30,30 fica fora da cena
 `campusFGA` (x 0–15, y 0–16); verifique antes de publicar em outra parcela,
@@ -64,19 +64,19 @@ repositório:
 
 ```bash
 DCL_PRIVATE_KEY=0x<chave> npm run deploy -- \
-  --target https://kiriland-metaverso.duckdns.org --no-browser --skip-validations
+  --target https://kiriland.unb.br --no-browser --skip-validations
 ```
 
 Verificação:
 
 ```bash
-curl -s https://kiriland-metaverso.duckdns.org/content/entities/active \
+curl -s https://kiriland.unb.br/content/entities/active \
   -H 'content-type: application/json' -d '{"pointers":["30,30"]}'
 ```
 
 Para visitar, abra
-<https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland-metaverso.duckdns.org&position=30%2C30>.
-A cena publicada usa o relay em `https://kiriland-metaverso.duckdns.org/robotarm`,
+<https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland.unb.br&position=30%2C30>.
+A cena publicada usa o relay em `https://kiriland.unb.br/robotarm`,
 publicado pelo nginx do Catalyst; a configuração e o problema do proxy da
 universidade com WebSocket estão em
 [implantação](../../relay-server/docs/implantacao.md).

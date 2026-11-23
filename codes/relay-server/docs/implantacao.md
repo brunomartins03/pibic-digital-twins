@@ -9,7 +9,7 @@ Validado em 20/11/2026.
 
 ```
 navegador (cliente web do Decentraland)
-   │  HTTPS  https://kiriland-metaverso.duckdns.org
+   │  HTTPS  https://kiriland.unb.br
    ▼
 proxy TLS da universidade (192.168.122.1, fora do nosso controle)
    │  HTTP
@@ -28,9 +28,9 @@ nginx do Catalyst (contêiner "nginx", porta 80 da VM 192.168.122.84)
 | Item                   | Valor                                                        |
 |------------------------|--------------------------------------------------------------|
 | Catalyst               | `/opt/catalyst/catalyst-owner`, realm `test`                 |
-| URL pública            | <https://kiriland-metaverso.duckdns.org>                     |
-| Cena                   | parcela 30,30 — <https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland-metaverso.duckdns.org&position=30%2C30> |
-| Relay                  | `https://kiriland-metaverso.duckdns.org/robotarm/`           |
+| URL pública            | <https://kiriland.unb.br>                     |
+| Cena                   | parcela 30,30 — <https://decentraland.zone/play/?realm=https%3A%2F%2Fkiriland.unb.br&position=30%2C30> |
+| Relay                  | `https://kiriland.unb.br/robotarm/`           |
 | Rede Docker do Catalyst | `catalyst-owner_default`, gateway `172.20.0.1`               |
 
 ## 1. Relay em Docker
@@ -127,6 +127,10 @@ requisições no log do nginx), que termina o HTTPS e repassa HTTP ao nginx
 Requisições HTTP comuns (`GET`, `POST` e o *preflight* CORS) atravessam o
 proxy normalmente.
 
+Os testes foram feitos em 20/11/2026 pelo endereço anterior,
+`kiriland-metaverso.duckdns.org`, que continua apontando para o mesmo servidor
+e o mesmo proxy.
+
 ### Solução adotada: consulta periódica por HTTP
 
 Em vez de manter um WebSocket, a cena consulta `/healthz` e `/api/state` a
@@ -152,7 +156,7 @@ cena `campusFGA` (x 0–15, y 0–16). Antes de publicar em outra parcela,
 verifique se ela está livre, pois a publicação substitui a cena existente:
 
 ```bash
-curl -s https://kiriland-metaverso.duckdns.org/content/entities/active \
+curl -s https://kiriland.unb.br/content/entities/active \
   -H 'content-type: application/json' -d '{"pointers":["30,30"]}'
 ```
 

@@ -62,7 +62,7 @@ junta não interrompe o movimento ainda em curso.
 
 | Constante             | Padrão                         | Descrição                                     |
 |-----------------------|--------------------------------|-----------------------------------------------|
-| `RELAY_URL`           | `https://kiriland-metaverso.duckdns.org/robotarm` | URL base do relay; `http://localhost:8080` no preview local |
+| `RELAY_URL`           | `https://kiriland.unb.br/robotarm` | URL base do relay; `http://localhost:8080` no preview local |
 | `RELAY_TRANSPORT`     | `http`                         | `http` (consulta periódica) ou `websocket`      |
 | `POLL_INTERVAL_S`     | `0.2`                          | Intervalo de consulta no modo `http`            |
 | `SCENE_TOKEN`         | *(vazio)*                      | Igual ao `SCENE_TOKEN` do relay                 |
