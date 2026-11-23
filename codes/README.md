@@ -7,6 +7,7 @@ Esta pasta contém os módulos do sistema:
 | [`robot/`](robot/README.md)              | C++ (Arduino)  | Firmware do ESP8266: aciona os servos e publica/recebe estados |
 | [`relay-server/`](relay-server/README.md)| Go             | Ponte MQTT ⇄ WebSocket entre o braço e as cenas do Decentraland |
 | [`scene/`](scene/README.md)              | TypeScript (SDK7) | Cena do Decentraland: braço virtual, telemetria e comandos |
+| [`deploy/`](deploy/README.md)            | Docker Compose | Ambiente completo: Catalyst, relay, cenas e comunicação        |
 
 ## Visão geral
 
