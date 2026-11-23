@@ -3,6 +3,7 @@ import { Quaternion, Vector3 } from '@dcl/sdk/math'
 import manifest from '../assets/models/arm/manifest.json'
 import {
   ARM_POSITION,
+  ARM_ROTATION_Y_DEG,
   ARM_SCALE,
   FOLLOW_SPEED_DEG_S,
   GRIPPER_CALIBRATION,
@@ -65,7 +66,12 @@ function followSystem(dt: number) {
 // part, parented to the part it is mounted on, with its origin on the pivot.
 export function createArm() {
   const root = engine.addEntity()
-  Transform.create(root, { position: ARM_POSITION, scale: Vector3.create(ARM_SCALE, ARM_SCALE, ARM_SCALE) })
+  const rotation = Quaternion.fromEulerDegrees(0, ARM_ROTATION_Y_DEG, 0)
+  Transform.create(root, {
+    position: ARM_POSITION,
+    rotation,
+    scale: Vector3.create(ARM_SCALE, ARM_SCALE, ARM_SCALE)
+  })
 
   const entities = new Map<string, Entity>()
   for (const part of manifest.parts) {
@@ -80,7 +86,9 @@ export function createArm() {
   }
 
   const credit = engine.addEntity()
-  Transform.create(credit, { position: Vector3.add(ARM_POSITION, Vector3.create(0, 0.3, -1.5)) })
+  // Behind the base, facing the same way as the arm.
+  const creditOffset = Vector3.rotate(Vector3.create(0, 0.3, -0.8), rotation)
+  Transform.create(credit, { position: Vector3.add(ARM_POSITION, creditOffset), rotation })
   TextShape.create(credit, {
     text: '"4-Axis Arm Assembly" by samoubala\nCC-BY-4.0',
     fontSize: 1

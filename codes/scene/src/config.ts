@@ -13,10 +13,14 @@ export const POLL_INTERVAL_S = 0.2
 export const SCENE_TOKEN = ''
 export const RECONNECT_DELAY_S = 3
 
-// Placement of the arm inside the parcel. The model is 17 cm tall, so it is
-// scaled up to be visible next to an avatar.
-export const ARM_POSITION = Vector3.create(8, 0, 8)
-export const ARM_SCALE = 8
+// Placement of the arm in scene coordinates (metres from the south-west corner
+// of parcel 0,0). Placeholder: the spot of the static arm model the twin
+// replaced in campusFGA, on parcel 12,13.
+export const ARM_POSITION = Vector3.create(205.12, 2.29, 208.82)
+// Rotation around the vertical axis, in degrees. At 0 the arm reaches north (+z).
+export const ARM_ROTATION_Y_DEG = -120
+// The model is 17.2 cm tall; 5.4 gives the 0.94 m of the replaced model.
+export const ARM_SCALE = 5.4
 
 // Degrees added or removed by each UI button press.
 export const COMMAND_STEP_DEG = 10
